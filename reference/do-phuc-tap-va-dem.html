@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Độ phức tạp &amp; đếm phép toán — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="crumbs">
+<a href="../index.html">Lộ trình ôn</a>
+<a href="glossary.html">Thuật ngữ</a>
+<a href="code-mau-cpp.html">Code mẫu C++</a>
+<a href="b-tree-va-bang-bam.html">B-Tree &amp; bảng băm</a>
+</nav>
+
+<p class="kicker">Tra nhanh · in ra 1–2 trang A4</p>
+<h1>Độ phức tạp &amp; đếm phép toán</h1>
+<p class="subtitle">Bảng phải thuộc + công thức đếm chính xác: mỗi công thức nêu rõ <em>đếm phép nào, ở đâu</em>.</p>
+
+<h2>1. Bảng độ phức tạp phải thuộc</h2>
+<table class="grid">
+<thead><tr><th>Thuật toán</th><th>Tốt nhất</th><th>Xấu nhất</th><th>Ghi chú của giáo viên</th></tr></thead>
+<tbody>
+<tr><td>Tìm kiếm tuyến tính</td><td>O(1)</td><td>O(n)</td><td>Giáo viên ghi "O(c)" = O(1)</td></tr>
+<tr><td>Tìm kiếm nhị phân</td><td>O(1)</td><td>O(log n)</td><td>"O(c)" = O(1)</td></tr>
+<tr><td>Selection Sort</td><td>O(n²)</td><td>O(n²)</td><td>So sánh luôn n(n−1)/2 ⇒ cả hai đều O(n²)</td></tr>
+<tr><td>Insertion Sort</td><td>O(n)</td><td>O(n²)</td><td>Tốt nhất = mảng đã tăng dần</td></tr>
+<tr><td>Quick Sort</td><td>O(n log n)</td><td>O(n²)</td><td>Xấu nhất khi phân hoạch lệch hẳn một bên</td></tr>
+<tr><td>Heap Sort</td><td>O(n log n)</td><td>O(n log n)</td><td>Build heap O(n) + n−1 lần Shift O(log n)</td></tr>
+</tbody>
+</table>
+<p>Giống vậy, trung bình (average) của Quick Sort là O(n log n)<span class="sidenote">Đối chiếu: <a href="https://en.wikipedia.org/wiki/Binary_search#Performance">Wikipedia — Binary search (Performance)</a> cho nhị phân ⌊log₂n⌋+1 lần so sánh xấu nhất; <a href="https://visualgo.net/en/sorting">VisuAlgo — Sorting</a> minh họa bảng độ phức tạp các thuật toán sắp xếp.</span> — đề chỉ hỏi tốt/xấu nên bảng trên là đủ.</p>
+
+<h2>2. Công thức đếm — đếm chính xác <em>phép nào</em></h2>
+
+<h3>Tìm kiếm tuyến tính (đề câu 1)</h3>
+<p>Đếm số lần so sánh <strong><code>a[i]==x</code></strong> trong vòng lặp (phép <code>i&lt;n</code>, <code>a[i]&lt;=x</code> không tính). X nằm ở chỉ số k (từ 0) ⇒ đã xét k+1 phần tử:</p>
+<table>
+<thead><tr><th>Vị trí x</th><th>Số lần <code>a[i]==x</code></th></tr></thead>
+<tbody>
+<tr><td>Đầu mảng (k = 0)</td><td><strong>1</strong></td></tr>
+<tr><td>Cuối mảng (k = n−1)</td><td><strong>n</strong></td></tr>
+<tr><td>Giữa mảng (chỉ số k)</td><td><strong>k+1</strong> (nếu k không biết, nêu kết quả theo k)</td></tr>
+<tr><td>Không có x (bản dừng sớm, mảng tăng)</td><td>số phần tử <code>&lt;= x</code> — gặp <code>a[i]&gt;x</code> là dừng</td></tr>
+</tbody>
+</table>
+
+<h3>Tìm kiếm nhị phân</h3>
+<p>Đếm số lần <code>a[mid]==x</code>: tốt nhất <strong>1</strong> (x đúng giữa ngay lần đầu); xấu nhất <strong>⌊log₂n⌋ + 1</strong><span class="sidenote"><a href="https://en.wikipedia.org/wiki/Binary_search#Performance">Wikipedia — Binary search, Performance</a>.</span> — mỗi vòng loại nửa, sau t vòng chỉ còn n/2ᵗ phần tử.</p>
+
+<h3>Selection Sort</h3>
+<p>Vòng i chạy j từ i+1 tới n−1, mỗi j đúng một phép <code>a[j]&lt;a[min]</code>:</p>
+<ul>
+<li>Số phép so sánh: (n−1) + (n−2) + … + 1 = <strong>n(n−1)/2 — luôn luôn</strong>, bất kể input.</li>
+<li>Số lần swap (hoán vị): nếu có <code>if (m != i)</code> thì ≤ n−1; nếu swap <em>vô điều kiện</em> mỗi vòng i (như đề câu 3) thì đúng <strong>n−1</strong> — kể cả mảng đã sắp xếp. Đây là bẫy: đề mẫu cho mảng gần đã sắp xếp, đáp án vẫn là 9 = 10−1.</li>
+</ul>
+
+<h3>Insertion Sort</h3>
+<p>Đếm phép so sánh <code>a[j]&gt;t</code> và phép dời chỗ <code>a[j+1]=a[j]</code> trong vòng <code>while</code>:</p>
+<table>
+<thead><tr><th>Trường hợp</th><th>So sánh</th><th>Dời chỗ</th></tr></thead>
+<tbody>
+<tr><td>Tốt nhất (mảng đã tăng dần)</td><td><strong>n−1</strong></td><td><strong>0</strong></td></tr>
+<tr><td>Xấu nhất (mảng giảm dần)</td><td><strong>n(n−1)/2</strong></td><td><strong>n(n−1)/2</strong></td></tr>
+</tbody>
+</table>
+<p>Mỗi phần tử a[i] so với ≤ i phần tử trước nó: tốt nhất chỉ 1 lần (không dời), xấu nhất đủ i lần (dời cả i).</p>
+
+<div class="callout trap">
+<p>Đề ghi rõ đếm <em>loại phép nào</em> và <em>đoạn code nào</em> — cùng một bài, đếm <code>==</code> khác đếm <code>&lt;</code>, đếm swap khác đếm so sánh. Luôn chép lại đúng dòng lệnh được đếm rồi mới tính.</p>
+</div>
+
+<h2>3. Checklist "cách đếm trong đề" — 4 bước</h2>
+<ol>
+<li><strong>Gạch chân</strong> đề hỏi đếm phép gì (<code>==</code>, <code>&lt;</code>, gán, dời chỗ, swap) ở vòng lặp nào.</li>
+<li><strong>Chạy tay 2–3 bước đầu</strong> trên input của đề, đếm đúng kiểu đề hỏi.</li>
+<li><strong>Đối chiếu công thức</strong> ở mục 2 — nếu số chạy tay khớp công thức, ghi đáp án bằng công thức (đề không bắt liệt kê từng bước).</li>
+<li><strong>Kiểm tra bẫy</strong>: Selection swap vô điều kiện = n−1; Insertion tốt nhất vẫn tốn n−1 so sánh (không phải 0); tuyến tính "cuối mảng" = n.</li>
+</ol>
+
+<p>Mọi công thức trên đã được kiểm chứng bằng code có bộ đếm chạy với n = 5, 10, 20, 50, 100, 1000 (Selection so sánh = n(n−1)/2 ở mọi n; Insertion tốt/xấu = n−1 và n(n−1)/2; nhị phân xấu nhất = ⌊log₂n⌋+1; tuyến tính k+1). Bài học chi tiết: <a href="../lessons/0001-tim-kiem-dem-so-sanh.html">Bài 01 — Tìm kiếm &amp; đếm</a>, <a href="../lessons/0002-selection-insertion-sort.html">Bài 02 — Selection &amp; Insertion</a>, <a href="../lessons/0003-quick-heap-sort.html">Bài 03 — Quick &amp; Heap</a>.</p>
+
+<div class="source">
+<p><a href="https://visualgo.net/en/sorting">VisuAlgo — Sorting</a> (bảng độ phức tạp từng thuật toán, chạy tay từng bước) và <a href="https://en.wikipedia.org/wiki/Binary_search#Performance">Wikipedia — Binary search (Performance)</a> cho công thức ⌊log₂n⌋+1. Đối chiếu chương Sắp xếp trong <em>Giáo trình CTDL&amp;GT</em> — Trần Hạnh Nhi, Dương Anh Đức.</p>
+</div>
+</main>
+</body>
+</html>

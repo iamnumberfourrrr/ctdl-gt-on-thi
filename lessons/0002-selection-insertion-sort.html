@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Selection &amp; Insertion Sort — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js" defer></script>
+</head>
+<body>
+<main>
+<nav class="crumbs">
+  <a href="../index.html">← Lộ trình ôn</a>
+  <a href="../reference/glossary.html">Thuật ngữ</a>
+  <a href="../reference/do-phuc-tap-va-dem.html">Bảng độ phức tạp</a>
+  <a href="../reference/code-mau-cpp.html">Code mẫu C++</a>
+</nav>
+
+<p class="kicker">Bài 02 · ~13 phút · Câu 3 đề mẫu (1.0đ)</p>
+<h1>Selection Sort &amp; Insertion Sort</h1>
+<p class="subtitle">Viết tay đúng hai hàm, chạy tay từng lượt, và đếm chuẩn số phép so sánh / phép gán / swap.</p>
+
+<div class="goal"><strong>Thắng lợi của bài:</strong> viết tay cả hai hàm không cần nhìn, và trả lời ngay Câu 3b: mảng 10 phần tử đã tăng dần vẫn tốn <strong>9 lần swap</strong> — vì Selection Sort swap <em>vô điều kiện</em> mỗi vòng.</div>
+
+<div class="callout exam">
+<p>Cho hàm <code>SelectionSort(int *a, const int &amp; n)</code> sort tăng dần. (a) Điền 2 dòng còn thiếu trong vòng lặp trong. (b) Mảng <code>1 2 3 4 5 6 8 8 8 8</code> đã có thứ tự — hàm thực hiện bao nhiêu lần <code>swap</code>?</p>
+</div>
+
+<h2>1. Selection Sort: chọn min, swap vô điều kiện</h2>
+<p>Mỗi lượt <em>i</em>: quét đoạn <code>a[i+1..n-1]</code> tìm chỉ số của phần tử nhỏ nhất, rồi swap nó về vị trí <em>i</em>. Đúng nguyên văn chữ ký của đề:</p>
+<pre><code>void SelectionSort(int *a, const int &amp;n) {
+    for (int i = 0; i &lt; n - 1; i++) {
+        int min = i;
+        for (int j = i + 1; j &lt; n; j++)
+            if (a[j] &lt; a[min]) min = j;
+        swap(a[i], a[min]);
+    }
+}</code></pre>
+<p>Chạy tay với a = <code>5 1 4 2 8</code> (mỗi dòng là mảng <em>sau</em> khi swap):</p>
+<table class="grid">
+<tr><th>lượt i</th><th>đoạn quét</th><th>min</th><th>mảng sau lượt</th><th>số lần a[j]&lt;a[min]</th></tr>
+<tr><td>0</td><td>1..4</td><td>1 (giá trị 1)</td><td>1 5 4 2 8</td><td>4</td></tr>
+<tr><td>1</td><td>2..4</td><td>3 (giá trị 2)</td><td>1 2 4 5 8</td><td>3</td></tr>
+<tr><td>2</td><td>3..4</td><td>3 (giá trị 4)</td><td>1 2 4 5 8</td><td>2</td></tr>
+<tr><td>3</td><td>4..4</td><td>4 (giá trị 5)</td><td>1 2 4 5 8</td><td>1</td></tr>
+</table>
+<p>Tổng: <strong>4 + 3 + 2 + 1 = 10 = n(n−1)/2</strong> phép so sánh <code>a[j]&lt;a[min]</code>, và <strong>n − 1 = 4</strong> lần swap. Số liệu đã kiểm chứng bằng chạy code đếm.</p>
+
+<h2>2. Hai con số phải thuộc + bẫy Câu 3b</h2>
+<table>
+<tr><th>Đại lượng</th><th>Công thức</th><th>Giải thích</th></tr>
+<tr><td>so sánh <code>a[j]&lt;a[min]</code></td><td><strong>n(n−1)/2</strong> — luôn luôn</td><td>vòng trong không có lệnh thoát sớm, mọi lượt quét hết đoạn</td></tr>
+<tr><td>lời gọi <code>swap</code></td><td><strong>n − 1</strong> — luôn luôn</td><td>swap nằm <em>ngoài</em> vòng trong, gọi cho mọi i dù min = i</td></tr>
+</table>
+
+<div class="callout trap">
+<p><strong>Bẫy Câu 3b:</strong> mảng <code>1 2 3 4 5 6 8 8 8 8</code> đã có thứ tự, nhiều bạn trả lời "0 swap vì chẳng cần đổi chỗ". Sai — <code>swap(a[i], a[min])</code> chạy vô điều kiện mỗi lượt i ⇒ <strong>9 lần</strong> (n − 1 = 9, đa số là swap a[i] với chính nó). So sánh vẫn đủ <strong>45 = 10·9/2</strong>. Đây là khác biệt then chốt với Insertion Sort: Insertion <em>có</em> lệnh thoát sớm trong while, Selection thì không.</p>
+</div>
+<div class="callout trap">
+<p><strong>Bẫy Câu 3a:</strong> vòng trong so <code>a[j]</code> với <code>a[min]</code>, <em>không</em> phải với <code>a[i]</code>. So với <code>a[i]</code> thì <code>min</code> chỉ nhận phần tử cuối cùng nhỏ hơn <code>a[i]</code>, không phải nhỏ nhất — ví dụ <code>3 1 2</code>: lượt 0 chọn 2 thay vì 1 ⇒ ra <code>2 1 3</code>, sai.</p>
+</div>
+
+<h2>3. Insertion Sort: rút bài, đẩy dòng</h2>
+<p>Mỗi lượt <em>i</em>: tách <code>a[i]</code> ra thành <code>x</code>, dồn các phần tử bên trái lớn hơn <code>x</code> sang phải một ô, rồi thả <code>x</code> vào chỗ trống:</p>
+<pre><code>void InsertionSort(int a[], int n) {
+    for (int i = 1; i &lt; n; i++) {
+        int x = a[i], pos = i - 1;
+        while (pos &gt;= 0 &amp;&amp; a[pos] &gt; x) {
+            a[pos + 1] = a[pos];
+            pos--;
+        }
+        a[pos + 1] = x;
+    }
+}</code></pre>
+<p>Chạy tay với a = <code>5 1 4 2 8</code>:</p>
+<table class="grid">
+<tr><th>i</th><th>x = a[i]</th><th>các lần so a[pos]&gt;x</th><th>số lần dồn</th><th>mảng sau lượt</th></tr>
+<tr><td>1</td><td>1</td><td>5&gt;1 ✓ (rồi pos = −1, dừng vì pos)</td><td>1</td><td>1 5 4 2 8</td></tr>
+<tr><td>2</td><td>4</td><td>5&gt;4 ✓, 1&gt;4 ✗</td><td>1</td><td>1 4 5 2 8</td></tr>
+<tr><td>3</td><td>2</td><td>5&gt;2 ✓, 4&gt;2 ✓, 1&gt;2 ✗</td><td>2</td><td>1 2 4 5 8</td></tr>
+<tr><td>4</td><td>8</td><td>5&gt;8 ✗</td><td>0</td><td>1 2 4 5 8</td></tr>
+</table>
+
+<h2>4. Đếm phép gán Insertion Sort — cần nói rõ đếm cái gì</h2>
+<p>Khi đề hỏi "số phép gán", ghi rõ bạn đếm 3 loại: <code>x = a[i]</code> (n−1 lần), mỗi lần dồn <code>a[pos+1] = a[pos]</code> (1 lần), và <code>a[pos+1] = x</code> (n−1 lần). Bảng dưới tính bằng code có gắn bộ đếm (a = <code>5 4 3 2 1</code> giảm dần = xấu nhất; a = <code>1 2 3 4 5</code> = tốt nhất):</p>
+<table>
+<tr><th>Mảng n = 5</th><th>lần so a[pos]&gt;x</th><th>x=a[i]</th><th>số dồn</th><th>a[pos+1]=x</th><th>độ phức tạp</th></tr>
+<tr><td>giảm dần 5 4 3 2 1</td><td>10</td><td>4</td><td>10</td><td>4</td><td>O(n²)</td></tr>
+<tr><td>tăng dần 1 2 3 4 5</td><td>4</td><td>4</td><td>0</td><td>4</td><td>O(n)</td></tr>
+</table>
+<p>Xấu nhất mỗi lượt <em>i</em> so đủ <em>i</em> lần ⇒ 1 + 2 + … + (n−1) = n(n−1)/2. Tốt nhất mỗi lượt chỉ so 1 lần (phần tử kế tiếp đã lớn hơn) ⇒ n − 1 ⇒ O(n). Vì vậy giáo trình ghi Insertion Sort <strong>O(n) / O(n²)</strong>, còn Selection Sort <strong>O(n²)</strong> cho mọi trường hợp.<span class="marginnote">So sánh xấu nhất = n(n−1)/2 đúng bằng Selection Sort, nhưng Insertion thắng ở mảng "gần có thứ tự": mỗi phần tử chỉ dồn ít bước là xong.</span></p>
+
+<h2>Luyện tập — tự nhớ lại, đừng cuộn lên</h2>
+
+<div class="q">
+  <p class="q-prompt">Câu 3a — dòng trong của Selection Sort: điền lệnh khởi tạo <code>j</code> mỗi lượt (viết đúng cú pháp C++, có dấu chấm phẩy).</p>
+  <p>Đáp án: <span class="blank" data-accept='["j = i + 1;","j=i+1;"]'></span></p>
+  <div class="q-explain">Vòng quét bắt đầu ngay sau vị trí đang xét: <code>for (int j = i + 1; j &lt; n; j++)</code>.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Câu 3a — dòng cập nhật min: nếu phần tử đang quét nhỏ hơn min hiện tại thì làm gì? (một dòng if, đúng cú pháp)</p>
+  <p>Đáp án: <span class="blank" data-accept='["if (a[j] &lt; a[min]) min = j;","if (a[j] &lt; a[min]) min=j;","if(a[j]&lt;a[min])min=j;"]'></span></p>
+  <div class="q-explain">So với <code>a[min]</code> chứ không phải <code>a[i]</code>; gán lại <em>chỉ số</em> min, chưa swap ở đây.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Câu 3b — <code>SelectionSort</code> chạy trên mảng đã có thứ tự <code>1 2 3 4 5 6 8 8 8 8</code>: số lần gọi <code>swap</code>?</p>
+  <p>Kết quả: <span class="blank" data-accept="9"></span></p>
+  <div class="q-explain">Swap gọi vô điều kiện cho i = 0..8 ⇒ n − 1 = 9 (phần lớn là tự swap với chính nó). Số phép so sánh vẫn đủ 45.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Với a = <code>5 1 4 2 8</code>, mảng sau lượt i = 2 của Selection Sort là gì? (viết các số cách nhau bởi khoảng trắng)</p>
+  <p>Đáp án: <span class="blank" data-accept='["1 2 4 5 8"]'></span></p>
+  <div class="q-explain">Lượt 0 swap 5↔1 ⇒ 1 5 4 2 8; lượt 1 swap 5↔2 ⇒ 1 2 4 5 8; lượt 2 min là chính 4 ⇒ mảng giữ nguyên.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Insertion Sort trên a = <code>5 4 3 2 1</code>: tổng số lần thực hiện phép so sánh <code>a[pos] &gt; x</code>?</p>
+  <p>Kết quả: <span class="blank" data-accept="10"></span></p>
+  <div class="q-explain">Mỗi lượt i so đủ i lần rồi mới chạm pos = −1: 1 + 2 + 3 + 4 = 10 = n(n−1)/2. Số lần dồn cũng bằng 10.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Mảng tăng dần là trường hợp nào của Insertion Sort, và độ phức tạp tương ứng?</p>
+  <ol class="q-options">
+    <li><button data-correct>tốt nhất, độ phức tạp O(n)</button></li>
+    <li><button>tốt nhất, độ phức tạp O(log n)</button></li>
+    <li><button>xấu nhất, độ phức tạp O(n²)</button></li>
+    <li><button>xấu nhất, độ phức tạp O(n)</button></li>
+  </ol>
+  <div class="q-explain">Tăng dần: mỗi lượt chỉ 1 phép so (sai ngay) ⇒ n − 1 phép ⇒ O(n). Giảm dần mới là xấu nhất O(n²).</div>
+</div>
+
+<h2>Ôn lại bài trước — tìm kiếm (Bài 01)</h2>
+
+<div class="q">
+  <p class="q-prompt">Tìm kiếm tuyến tính (có dùng điều kiện tăng dần) trên mảng n phần tử, x nằm ở chỉ số k (từ 0): số lần so sánh <code>a[i]==x</code>?</p>
+  <p>Kết quả: <span class="blank" data-accept='["k + 1","k+1"]'></span></p>
+  <div class="q-explain">Mỗi vòng xét 1 phần tử đúng 1 lần so <code>==</code>; đến x ở chỉ số k là đã xét k + 1 phần tử.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Xấu nhất của tìm kiếm nhị phân trên mảng n phần tử?</p>
+  <ol class="q-options">
+    <li><button data-correct>⌊log₂n⌋ + một</button></li>
+    <li><button>⌊log₂n⌋ + hai</button></li>
+    <li><button>n chia đôi phép</button></li>
+    <li><button>n trừ một phép</button></li>
+  </ol>
+  <div class="q-explain">Xấu nhất ⌊log₂n⌋ + 1 lần so <code>a[mid]==x</code>; tốt nhất 1 lần (x ngay tại mid đầu tiên).</div>
+</div>
+
+<div class="source">
+<p><a href="https://visualgo.net/en/sorting">VisuAlgo — Sorting</a> (chọn Selection / Insertion, bấm Sort → Execution, xem từng bước ~5 phút mỗi thuật toán). Đối chiếu code với chương Sắp xếp trong <em>Giáo trình CTDL&amp;GT</em> — Trần Hạnh Nhi, Dương Anh Đức.</p>
+</div>
+
+<div class="ask"><p>Chỗ nào chưa rõ — ví dụ đề hỏi "phép gán" thì có tính cả <code>x = a[i]</code> hay không — cứ hỏi agent ngay trong cuộc trò chuyện.</p></div>
+
+<nav class="pager">
+  <a href="0001-tim-kiem-dem-so-sanh.html">← Bài 01 · Tìm kiếm</a>
+  <a href="0003-quick-heap-sort.html">Bài 03 · Quick &amp; Heap Sort →</a>
+</nav>
+</main>
+</body>
+</html>

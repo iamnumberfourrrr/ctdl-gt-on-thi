@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07 · Bảng băm — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js" defer></script>
+</head>
+<body>
+<main>
+<nav class="crumbs">
+  <a href="../index.html">← Lộ trình ôn</a>
+  <a href="../reference/glossary.html">Thuật ngữ</a>
+  <a href="../reference/b-tree-va-bang-bam.html">B-Tree &amp; bảng băm</a>
+</nav>
+
+<p class="kicker">Bài 07 · ~14 phút · Câu 7 + Câu 8 đề mẫu (2.0đ)</p>
+<h1>Bảng băm: nối kết, dò tuyến tính, dò bậc 2, băm kép</h1>
+<p class="subtitle">Điền đúng bảng từng bước, thêm / tìm / xóa với Empty–Occupied–Deleted, và tôn trọng load factor.</p>
+
+<div class="goal"><strong>Thắng lợi của bài:</strong> điền trọn Bảng 1 + Bảng 2 của Câu 7 (băm kép, có cổng load factor) và bảng sau khi chèn 10, 23 của Câu 8 (dò tuyến tính với DEL) — không cần cuộn lên xem.</div>
+
+<div class="callout exam">
+<p>Cho bảng băm với M = 11 (TableSize = 11), <strong>Load factor là 0.6</strong> và hai hàm băm h₁(key) = key mod 7, h₂(key) = 7 − (key mod 7). Chèn các khóa {1, 8, 15, 22, 10, 31, 29, 36} theo thứ tự từ trái sang phải bằng phương pháp băm Double-Hashing: <strong>h(key, i) = (h₁(key) + i·h₂(key)) mod TableSize</strong>. (a) Trình bày từng bước: điền h₁, h₂ và kết quả băm lại lần 1–4 vào Bảng 1. (b) Điền các khóa vào bảng băm HT (Bảng 2).</p>
+</div>
+
+<h2>1. Hàm băm &amp; đụng độ</h2>
+<p><strong>Hàm băm</strong> (hash function) biến khóa thành chỉ số ô: h(key) = key mod M, M = TableSize. Hai khóa khác nhau rơi cùng một ô → <strong>đụng độ</strong> (collision). Đề thi cả hai hướng xử lý:</p>
+<ul>
+<li><strong>Băm nối kết</strong> (separate chaining): mỗi ô giữ một danh sách liên kết; khóa đụng độ xếp chung danh sách của ô.</li>
+<li><strong>Địa chỉ mở</strong> (open addressing): khóa phải nằm trong bảng; đụng độ thì <em>băm lại</em> (rehashing) sang ô khác theo i = 0, 1, 2, …</li>
+</ul>
+<table>
+<tr><th>Cách dò (đề dùng cả ba)</th><th>Công thức, i = 0, 1, 2, …</th><th>Bước nhảy khi đụng độ</th></tr>
+<tr><td>Dò tuyến tính (linear probing)</td><td>h(key, i) = (h(key) + i) mod M</td><td>+1 mỗi lần</td></tr>
+<tr><td>Dò bậc 2 (quadratic probing)</td><td>h(key, i) = (h(key) + i²) mod M</td><td>offset 1, 4, 9, … (i²)</td></tr>
+<tr><td>Băm kép (double hashing)</td><td>h(key, i) = (h₁(key) + i·h₂(key)) mod M</td><td>do h₂ quyết định</td></tr>
+</table>
+<p>Chạy tay luôn bắt đầu <strong>i = 0</strong> (đúng vị trí h ban đầu). Trong Câu 7, h₁ cho vị trí xuất phát, h₂ cho độ dài bước nhảy: các khóa ≡ 1 (mod 7) — tức 1, 8, 15, 22, 29, 36 — có cùng tuyến dò 1 → 7 → 2 → 8 → 3 → 9 → … (cộng dần 6, mod 11). "Kết quả băm lại lần i" trong Bảng 1 = chỉ số ô thử ở bước i, <em>kể cả ô trống mà khóa cuối cùng vào</em>.</p>
+
+<h2>2. Băm nối kết (separate chaining)</h2>
+<p>Ô băm là đầu một danh sách liên kết. <strong>Quy ước chạy tay ở đây: khóa mới thêm vào cuối danh sách của ô</strong> — giữ đúng thứ tự chèn. Một số giáo trình giữ từng danh sách tăng dần; nếu đề yêu cầu sắp xếp thì theo đề.</p>
+<p>Ví dụ — vẫn bộ khóa Câu 7 nhưng M = 7, h(key) = key mod 7, băm nối kết:</p>
+<table>
+<tr><th>Ô</th><th>Danh sách liên kết của ô (thứ tự chèn)</th></tr>
+<tr><td>1</td><td>1 → 8 → 15 → 22 → 29 → 36</td></tr>
+<tr><td>3</td><td>10 → 31</td></tr>
+<tr><td>0, 2, 4, 5, 6</td><td>rỗng</td></tr>
+</table>
+<p>Tìm / xóa / thêm chỉ làm việc trong đúng danh sách của ô h(key) — không đụng đến ô khác. Băm nối kết cho phép α &gt; 1 (danh sách dài ra), nên không có tình trạng "bảng đầy" như địa chỉ mở.</p>
+
+<h2>3. Chạy tay dò bậc 2: offset là 1, 4, 9 (i²)</h2>
+<p>M = 11, h(key) = key mod 11, chèn 3, 14, 25, 17, 28. Cách ghi như Bảng 1 của đề:</p>
+<table class="grid">
+<tr><th>key</th><th>h(key)</th><th>lần 1</th><th>lần 2</th><th>vào ô</th></tr>
+<tr><td>3</td><td>3</td><td>—</td><td>—</td><td class="new">3</td></tr>
+<tr><td>14</td><td>3</td><td>4</td><td>—</td><td class="new">4</td></tr>
+<tr><td>25</td><td>3</td><td>4</td><td>7</td><td class="new">7</td></tr>
+<tr><td>17</td><td>6</td><td>—</td><td>—</td><td class="new">6</td></tr>
+<tr><td>28</td><td>6</td><td>7</td><td>10</td><td class="new">10</td></tr>
+</table>
+<p>Khóa 25: ô 3 bị chiếm; i = 1: (3 + 1²) mod 11 = 4 — bị chiếm; i = 2: (3 + 2²) mod 11 = 7 — trống, vào ô 7. Lưu ý offset mỗi lần là i² = 1, 4, 9, … chứ <em>không</em> phải dò dần +1, +2, +3 như tuyến tính.</p>
+
+<h2>4. Hệ số tải (load factor): cổng chặn của Câu 7</h2>
+<p><strong>α = n/M</strong> với n = số khóa đã chèn, M = TableSize. Câu 7 cho "Load factor là 0.6", M = 11 ⇒ chỉ chèn khi α <em>sau khi chèn</em> còn ≤ 0.6 <em>[suy luận — hỏi lại giảng viên]</em>:<span class="marginnote">Hai bằng chứng thuận cho cách hiểu này: floor(0.6 × 11) = 6 khóa; và nếu cứ chèn 29 thì phải băm lại tới lần 5 (7, 2, 8, 3, 9) — vượt 4 cột "băm lại" mà Bảng 1 của đề in sẵn.</span></p>
+<ul>
+<li>Sau 6 khóa (1, 8, 15, 22, 10, 31): α = 6/11 ≈ 0.55 ≤ 0.6 — chèn đủ 6 khóa.</li>
+<li>Khóa thứ 7 (29, rồi 36): α = 7/11 ≈ 0.64 &gt; 0.6 ⇒ <strong>không chèn</strong>. Bảng 1 vẫn điền h₁ = 1, h₂ = 6 rồi ghi "không chèn — vượt load factor".</li>
+</ul>
+
+<h2>5. Ba trạng thái ô: Empty, Occupied, Deleted (DEL)</h2>
+<div class="callout exam">
+<p>Câu 8: TableSize = 10 (chỉ số 0–9), h(key) = key mod 10, Linear probing. Bảng hiện trạng: 0: 50 · 1: 41 · 2: <strong>DEL</strong> · 3: 22 · 4: trống · 5: 55 · 6: <strong>DEL</strong> · 7: trống · 8: <strong>DEL</strong> · 9: 28. (a) Chèn thêm 10 và 23 — điền bảng kết quả (ghi rõ DEL, ô Empty để trống). (b) Viết quy tắc vận hành khi <em>xóa</em> giá trị x: băm vào ô Empty / Deleted / Occupied thì làm gì?</p>
+</div>
+<p>Trong địa chỉ mở, <strong>xóa không được để ô thành Empty</strong>: tuyến dò của khóa khác đang đi ngang ô này sẽ dừng nhầm và kết luận "không có". Ô đã xóa phải ghi <strong>DEL</strong> (xóa mềm — tombstone).<span class="sidenote">OpenDSA — <a href="https://opendsa-server.cs.vt.edu/ODSA/Books/CS3/html/HashDel.html">Hashing Deletion</a>: quá trình xóa không thể đơn giản đánh dấu ô là empty vì sẽ cắt đứt chuỗi dò của các khóa khác; thay vào đó dùng bản ghi "tombstone".</span></p>
+<p>Suy ra hai quy tắc còn lại:</p>
+<ul>
+<li><strong>Chèn x</strong>: dò từ h(x); gặp DEL thì <em>ghi nhớ ô DEL đầu tiên</em> nhưng dò tiếp; gặp <strong>Empty</strong> mới chắc x chưa có trong bảng → đặt x vào ô DEL đã ghi nhớ (nếu có), không thì vào chính ô Empty đó. Trên đường mà gặp x thì x đã có — không chèn lại.</li>
+<li><strong>Tìm / xóa x</strong>: DEL bị bỏ qua như ô bận; Empty mới là điểm dừng "x không có".</li>
+</ul>
+<p>Chạy tay Câu 8a:</p>
+<table>
+<tr><th>Chèn</th><th>Tuyến dò</th><th>Kết luận</th><th>Vào ô</th></tr>
+<tr><td>10</td><td>0 (50) → 1 (41) → 2 (DEL) → 3 (22) → 4 (Empty)</td><td>Empty ⇒ chắc 10 chưa có; DEL đầu tiên trên đường = ô 2</td><td class="new">2</td></tr>
+<tr><td>23</td><td>3 (22) → 4 (Empty)</td><td>Empty ⇒ chắc 23 chưa có; không có DEL nào trên đường</td><td class="new">4</td></tr>
+</table>
+<table class="grid">
+<tr><th>Chỉ số</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+<tr><th>Khóa</th><td>50</td><td>41</td><td class="new">10</td><td>22</td><td class="new">23</td><td>55</td><td class="del">DEL</td><td></td><td class="del">DEL</td><td>28</td></tr>
+</table>
+<p>Quy tắc xóa x (đáp án Câu 8b) — băm lại trong quá trình xóa:</p>
+<table>
+<tr><th>Gặp ô trạng thái</th><th>Thực hiện</th></tr>
+<tr><td>Empty</td><td>Dừng — x không có trong bảng, không xóa gì.</td></tr>
+<tr><td>Deleted (không phải x)</td><td>Bỏ qua, dò tiếp ô kế tiếp.</td></tr>
+<tr><td>Occupied, khóa = x</td><td>Xóa x rồi ghi DEL cho ô đó — không để Empty.</td></tr>
+<tr><td>Occupied, khóa ≠ x</td><td>Dò tiếp ô kế tiếp.</td></tr>
+</table>
+
+<div class="callout trap">
+<p>Bốn chỗ mất điểm: (1) xóa xong để <strong>Empty</strong> thay vì DEL — sai ngay vì cắt đứt tuyến dò; (2) chèn gặp DEL rồi <strong>đặt luôn</strong> — phải dò tới Empty mới chắc khóa chưa có, rồi <em>quay về DEL đầu tiên</em> (Câu 8a: 10 vào ô 2, không phải ô 4); (3) quên cổng load factor — Câu 7 chèn đủ 6 khóa là dừng, 29 và 36 chỉ điền h₁, h₂ rồi ghi "không chèn"; (4) dò bậc 2 nhầm bước +1, +2, +3 — offset là i²: +1, +4, +9.</p>
+</div>
+
+<h2>Luyện tập — tự nhớ lại, đừng cuộn lên</h2>
+
+<div class="q">
+  <p class="q-prompt">Câu 7a — điền Bảng 1 (dòng key 1 làm mẫu). Ô không cần băm lại: ghi "-". Khóa không được chèn: ghi "x" vào các ô lần 1–4.</p>
+  <table class="grid">
+  <tr><th>key</th><th>h₁</th><th>h₂</th><th>lần 1</th><th>lần 2</th><th>lần 3</th><th>lần 4</th></tr>
+  <tr><td>1</td><td>1</td><td>6</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+  <tr><td>8</td><td><span class="blank" data-accept='["1"]' data-width="4"></span></td><td><span class="blank" data-accept='["6"]' data-width="4"></span></td><td><span class="blank" data-accept='["7"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td></tr>
+  <tr><td>15</td><td><span class="blank" data-accept='["1"]' data-width="4"></span></td><td><span class="blank" data-accept='["6"]' data-width="4"></span></td><td><span class="blank" data-accept='["7"]' data-width="4"></span></td><td><span class="blank" data-accept='["2"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td></tr>
+  <tr><td>22</td><td><span class="blank" data-accept='["1"]' data-width="4"></span></td><td><span class="blank" data-accept='["6"]' data-width="4"></span></td><td><span class="blank" data-accept='["7"]' data-width="4"></span></td><td><span class="blank" data-accept='["2"]' data-width="4"></span></td><td><span class="blank" data-accept='["8"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td></tr>
+  <tr><td>10</td><td><span class="blank" data-accept='["3"]' data-width="4"></span></td><td><span class="blank" data-accept='["4"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td></tr>
+  <tr><td>31</td><td><span class="blank" data-accept='["3"]' data-width="4"></span></td><td><span class="blank" data-accept='["4"]' data-width="4"></span></td><td><span class="blank" data-accept='["7"]' data-width="4"></span></td><td><span class="blank" data-accept='["0"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "x"]' data-width="4"></span></td></tr>
+  <tr><td>29</td><td><span class="blank" data-accept='["1"]' data-width="4"></span></td><td><span class="blank" data-accept='["6"]' data-width="4"></span></td><td><span class="blank" data-accept='["x", "không chèn", "khong chen", "-", "—", ""]' data-width="4"></span></td><td><span class="blank" data-accept='["x", "không chèn", "khong chen", "-", "—", ""]' data-width="4"></span></td><td><span class="blank" data-accept='["x", "không chèn", "khong chen", "-", "—", ""]' data-width="4"></span></td><td><span class="blank" data-accept='["x", "không chèn", "khong chen", "-", "—", ""]' data-width="4"></span></td></tr>
+  <tr><td>36</td><td><span class="blank" data-accept='["1"]' data-width="4"></span></td><td><span class="blank" data-accept='["6"]' data-width="4"></span></td><td><span class="blank" data-accept='["x", "không chèn", "khong chen", "-", "—", ""]' data-width="4"></span></td><td><span class="blank" data-accept='["x", "không chèn", "khong chen", "-", "—", ""]' data-width="4"></span></td><td><span class="blank" data-accept='["x", "không chèn", "khong chen", "-", "—", ""]' data-width="4"></span></td><td><span class="blank" data-accept='["x", "không chèn", "khong chen", "-", "—", ""]' data-width="4"></span></td></tr>
+  </table>
+  <div class="q-explain">8: (1+1·6) mod 11 = 7. 15 và 22 đi tiếp cùng tuyến: 7 rồi 2; 22 cần thêm i = 3: (1+3·6) mod 11 = (1+18) mod 11 = 8. 10: h₁ = 3 trống ngay (h₂ = 4 không dùng tới). 31: i = 1: (3+4) = 7 bị chiếm; i = 2: (3+8) mod 11 = 0. Sau 6 khóa, chèn khóa thứ 7 đưa α = 7/11 ≈ 0.64 &gt; 0.6 nên 29, 36 không chèn <em>[suy luận]</em>.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Câu 7b — điền Bảng 2 (ô Empty ghi "-").</p>
+  <table class="grid">
+  <tr><th>Chỉ số</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr>
+  <tr><th>Khóa</th><td><span class="blank" data-accept='["31"]' data-width="4"></span></td><td><span class="blank" data-accept='["1"]' data-width="4"></span></td><td><span class="blank" data-accept='["15"]' data-width="4"></span></td><td><span class="blank" data-accept='["10"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "empty"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "empty"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "empty"]' data-width="4"></span></td><td><span class="blank" data-accept='["8"]' data-width="4"></span></td><td><span class="blank" data-accept='["22"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "empty"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "empty"]' data-width="4"></span></td></tr>
+  </table>
+  <div class="q-explain">Đúng 6 khóa đầu: 1 → ô 1; 8 → ô 7; 15 → ô 2; 22 → ô 8; 10 → ô 3; 31 → ô 0. Các ô 4, 5, 6, 9, 10 trống (Empty).</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">M = 11, load factor tối đa 0.6 — bảng này chèn được nhiều nhất bao nhiêu khóa?</p>
+  <p>Số khóa tối đa: <span class="blank" data-accept="6" data-width="3"></span></p>
+  <div class="q-explain">floor(0.6 × 11) = floor(6.6) = 6. Khóa thứ 7 sẽ đưa α = 7/11 ≈ 0.64 &gt; 0.6 <em>[suy luận — hỏi lại giảng viên]</em>.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Câu 8a — M = 10, h(key) = key mod 10, dò tuyến tính. Bảng "trước" là đề cho; điền toàn bộ hàng "sau" khi chèn 10 rồi 23 (ô Empty ghi "-", ô đã xóa ghi DEL).</p>
+  <table class="grid">
+  <tr><th>Chỉ số</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+  <tr><th>Trước</th><td>50</td><td>41</td><td class="del">DEL</td><td>22</td><td></td><td>55</td><td class="del">DEL</td><td></td><td class="del">DEL</td><td>28</td></tr>
+  <tr><th>Sau</th><td><span class="blank" data-accept='["50"]' data-width="4"></span></td><td><span class="blank" data-accept='["41"]' data-width="4"></span></td><td><span class="blank" data-accept='["10"]' data-width="4"></span></td><td><span class="blank" data-accept='["22"]' data-width="4"></span></td><td><span class="blank" data-accept='["23"]' data-width="4"></span></td><td><span class="blank" data-accept='["55"]' data-width="4"></span></td><td><span class="blank" data-accept='["DEL", "deleted"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", "", "empty"]' data-width="4"></span></td><td><span class="blank" data-accept='["DEL", "deleted"]' data-width="4"></span></td><td><span class="blank" data-accept='["28"]' data-width="4"></span></td></tr>
+  </table>
+  <div class="q-explain">10: dò 0 (50) → 1 (41) → 2 (DEL, ghi nhớ) → 3 (22) → 4 (Empty ⇒ chắc chưa có 10) → quay về DEL đầu tiên = ô 2. 23: dò 3 (22) → 4 (Empty, không có DEL trên đường) → ô 4.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Chèn x bằng dò tuyến tính, trên đường dò gặp ô DEL <em>đầu tiên</em> thì:</p>
+  <ol class="q-options">
+    <li><button data-correct>Ghi nhớ, dò tiếp</button></li>
+    <li><button>Đặt x vào ngay</button></li>
+    <li><button>Báo bảng đã đầy</button></li>
+    <li><button>Dò lại từ đầu</button></li>
+  </ol>
+  <div class="q-explain">Phải dò tới Empty mới chắc x chưa có (x có thể nằm phía sau ô DEL); lúc đó mới quay về DEL đầu tiên để đặt x. Gặp x trên đường thì x đã có, không chèn lại.</div>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">Câu 8b — không nhìn lên: viết 3 dòng quy tắc xóa x — gặp Empty, gặp Deleted, gặp Occupied thì làm gì?</p>
+  <div class="q-explain">Empty → dừng, x không có trong bảng. Deleted (không phải x) → bỏ qua, dò tiếp ô kế. Occupied → nếu khóa = x: xóa và ghi DEL (không để Empty); nếu khóa ≠ x: dò tiếp ô kế.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Dò bậc 2, M = 10, h(key) = key mod 10. Chèn lần lượt 4, 24, 44, 34 (dòng key 4 làm mẫu; ô không cần dò ghi "-"):</p>
+  <table class="grid">
+  <tr><th>key</th><th>h</th><th>lần 1</th><th>lần 2</th><th>lần 3</th><th>vào ô</th></tr>
+  <tr><td>4</td><td>4</td><td>-</td><td>-</td><td>-</td><td>4</td></tr>
+  <tr><td>24</td><td><span class="blank" data-accept='["4"]' data-width="4"></span></td><td><span class="blank" data-accept='["5"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", ""]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", ""]' data-width="4"></span></td><td><span class="blank" data-accept='["5"]' data-width="4"></span></td></tr>
+  <tr><td>44</td><td><span class="blank" data-accept='["4"]' data-width="4"></span></td><td><span class="blank" data-accept='["5"]' data-width="4"></span></td><td><span class="blank" data-accept='["8"]' data-width="4"></span></td><td><span class="blank" data-accept='["-", "—", ""]' data-width="4"></span></td><td><span class="blank" data-accept='["8"]' data-width="4"></span></td></tr>
+  <tr><td>34</td><td><span class="blank" data-accept='["4"]' data-width="4"></span></td><td><span class="blank" data-accept='["5"]' data-width="4"></span></td><td><span class="blank" data-accept='["8"]' data-width="4"></span></td><td><span class="blank" data-accept='["3"]' data-width="4"></span></td><td><span class="blank" data-accept='["3"]' data-width="4"></span></td></tr>
+  </table>
+  <div class="q-explain">24: (4+1²) = 5 trống. 44: 5 đã đầy ⇒ (4+2²) = 8. 34: 5, 8 đầy ⇒ (4+3²) mod 10 = 13 mod 10 = 3. Offset là 1, 4, 9 — bình phương của i.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Băm nối kết, M = 5, h(key) = key mod 5. Chèn theo thứ tự 7, 12, 17, 8, 3 (thêm vào cuối danh sách của ô) — ghi danh sách tại ô 2 và ô 3 (thứ tự chèn, cách nhau bởi khoảng trắng):</p>
+  <p>Ô 2: <span class="blank" data-accept='["7 12 17","7 → 12 → 17","7->12->17"]' data-width="12"></span> &nbsp; Ô 3: <span class="blank" data-accept='["8 3","8 → 3","8->3"]' data-width="6"></span></p>
+  <div class="q-explain">7, 12, 17 đều ≡ 2 (mod 5) ⇒ cùng ô 2, theo thứ tự chèn 7 → 12 → 17. 8 ≡ 3 và 3 ≡ 3 ⇒ ô 3 chứa 8 → 3 (8 chèn trước).</div>
+</div>
+
+<h2>Ôn lại bài trước — B-Tree &amp; BST</h2>
+
+<div class="q">
+  <p class="q-prompt">B-Tree bậc 5: một node <em>không phải gốc</em> phải chứa tối thiểu bao nhiêu khóa?</p>
+  <ol class="q-options">
+    <li><button>1 khóa</button></li>
+    <li><button data-correct>2 khóa</button></li>
+    <li><button>3 khóa</button></li>
+    <li><button>4 khóa</button></li>
+  </ol>
+  <div class="q-explain">⌈5/2⌉ − 1 = 3 − 1 = 2 khóa (tối đa m − 1 = 4). Gốc mới cần tối thiểu 1 khóa.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Duyệt BST theo kiểu nào in ra khóa theo thứ tự tăng dần?</p>
+  <ol class="q-options">
+    <li><button>Duyệt NLR</button></li>
+    <li><button data-correct>Duyệt LNR</button></li>
+    <li><button>Duyệt LRN</button></li>
+    <li><button>Duyệt RNL</button></li>
+  </ol>
+  <div class="q-explain">Trái &lt; gốc &lt; phải nên duyệt trung tự LNR (trái–gốc–phải) cho dãy tăng dần; RNL cho dãy giảm dần.</div>
+</div>
+
+<div class="source">
+<p><a href="https://visualgo.net/en/hashtable">VisuAlgo — Hash Table</a> (NUS; chọn Linear / Quadratic Probing, Double Hashing hoặc Separate Chaining rồi Insert / Remove từng khóa để tự chấm bảng đã chạy tay, ~10 phút).</p>
+</div>
+
+<div class="ask"><p>Hai điểm nên hỏi giảng viên trước thi: (1) "Load factor 0.6" đã đúng theo cách hiểu chỉ chèn khi α sau chèn ≤ 0.6 chưa; (2) băm nối kết có bắt buộc danh sách từng ô tăng dần không. Cần luyện thêm bảng nào — cứ hỏi agent ngay trong cuộc trò chuyện.</p></div>
+
+<nav class="pager">
+  <a href="0006-b-tree.html">← Bài 06 · B-Tree</a>
+  <a href="0008-de-tron-luyen-tap.html">Bài 08 · Đề trộn luyện tập →</a>
+</nav>
+</main>
+</body>
+</html>

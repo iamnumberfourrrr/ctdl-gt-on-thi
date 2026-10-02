@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mẫu · Code C++ thi viết tay — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main class="wide">
+<nav class="crumbs">
+<a href="../index.html">Lộ trình ôn</a>
+<a href="../reference/glossary.html">Thuật ngữ</a>
+<a href="../reference/b-tree-va-bang-bam.html">B-Tree &amp; Bảng băm</a>
+<span>Code C++</span>
+</nav>
+
+<p class="kicker">Phiếu tham chiếu · in ra luyện viết tay</p>
+<h1>Code C++ thi viết tay</h1>
+<p class="subtitle">Mọi hàm có thể bị yêu cầu cài đặt. Mã theo phong cách giáo trình (LIST pHead/pTail, QuickSort phần tử giữa, Shift/CreateHeap). Toàn bộ đã biên dịch và chạy đúng bằng clang++ (mẫu gốc: <code>/tmp/check.cpp</code>).</p>
+
+<div class="callout tip"><p>Ghi nhớ mỗi hàm kèm <strong>một dòng chú thích in nghiêng</strong> — đó là bất biến/bẫy mà chấm điểm thường soi (swap vô điều kiện của Selection, pTail khi thêm/xóa cuối, khóa bằng thì không chèn…).</p></div>
+
+<div class="cols">
+
+<div class="card">
+<h3>Tìm kiếm tuyến tính — mảng tăng dần</h3>
+<pre><code>int LinearSearch(int a[], int n, int x) {
+    <span class="cm">// a[i] &gt; x thì dừng: sau đó không còn x</span>
+    for (int i = 0; i &lt; n &amp;&amp; a[i] &lt;= x; i++)
+        if (a[i] == x) return i;
+    return -1;
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>Tìm kiếm tuyến tính — bản thường (0.25đ)</h3>
+<pre><code>int LinearSearchPlain(int a[], int n, int x) {
+    <span class="cm">// duyệt hết, không dùng điều kiện tăng dần</span>
+    for (int i = 0; i &lt; n; i++)
+        if (a[i] == x) return i;
+    return -1;
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>Tìm kiếm nhị phân</h3>
+<pre><code>int BinarySearch(int a[], int n, int x) {
+    <span class="cm">// left..right thu hẹp một nửa mỗi vòng</span>
+    int left = 0, right = n - 1;
+    while (left &lt;= right) {
+        int mid = (left + right) / 2;
+        if (a[mid] == x) return mid;
+        if (x &lt; a[mid]) right = mid - 1;
+        else left = mid + 1;
+    }
+    return -1;
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>SelectionSort — O(n²)</h3>
+<pre><code>void SelectionSort(int *a, const int &amp;n) {
+    <span class="cm">// swap MỖI vòng i, kể cả min == i (bẫy đếm phép gán!)</span>
+    for (int i = 0; i &lt; n - 1; i++) {
+        int min = i;
+        for (int j = i + 1; j &lt; n; j++)
+            if (a[j] &lt; a[min]) min = j;
+        swap(a[i], a[min]);
+    }
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>InsertionSort — O(n) / O(n²)</h3>
+<pre><code>void InsertionSort(int a[], int n) {
+    <span class="cm">// chèn x = a[i] vào đoạn [0..i-1] đãSORT</span>
+    for (int i = 1; i &lt; n; i++) {
+        int x = a[i], pos = i - 1;
+        while (pos &gt;= 0 &amp;&amp; a[pos] &gt; x) {
+            a[pos + 1] = a[pos]; pos--;
+        }
+        a[pos + 1] = x;
+    }
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>QuickSort — O(n log n) / O(n²)</h3>
+<pre><code>void QuickSort(int a[], int left, int right) {
+    <span class="cm">// x = phần tử GIỮA; do-while; swap khi i &lt;= j</span>
+    int i = left, j = right, x = a[(left + right) / 2];
+    do {
+        while (a[i] &lt; x) i++;
+        while (a[j] &gt; x) j--;
+        if (i &lt;= j) { swap(a[i], a[j]); i++; j--; }
+    } while (i &lt; j);
+    if (left &lt; j) QuickSort(a, left, j);
+    if (i &lt; right) QuickSort(a, i, right);
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>Shift + CreateHeap + HeapSort — O(n log n)</h3>
+<pre><code>void Shift(int a[], int l, int r) {
+    <span class="cm">// sàng max-heap (0-indexed); con LỚN hơn mới lên</span>
+    int i = l, j = 2 * i + 1, x = a[i];
+    while (j &lt;= r) {
+        if (j &lt; r &amp;&amp; a[j] &lt; a[j + 1]) j++;
+        if (a[j] &lt;= x) break;
+        a[i] = a[j]; i = j; j = 2 * i + 1;
+    }
+    a[i] = x;
+}
+void CreateHeap(int a[], int n) {
+    <span class="cm">// sàng từ node cuối-có-con: l = n/2 - 1 trở về 0</span>
+    for (int l = n / 2 - 1; l &gt;= 0; l--) Shift(a, l, n - 1);
+}
+void HeapSort(int a[], int n) {
+    <span class="cm">// swap a[0]↔a[r] rồi sàng lại đoạn [0..r-1]</span>
+    CreateHeap(a, n);
+    for (int r = n - 1; r &gt; 0; r--) {
+        swap(a[0], a[r]); Shift(a, 0, r - 1);
+    }
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>DSLK — struct &amp; thao tác cơ bản</h3>
+<pre><code>struct NODE { int info; NODE *pNext; };
+struct LIST { NODE *pHead, *pTail; };
+
+void CreateEmptyList(LIST &amp;L) { L.pHead = L.pTail = NULL; }
+NODE *CreateNode(int x) {
+    NODE *p = new NODE;
+    p-&gt;info = x; p-&gt;pNext = NULL; return p;
+}
+void AddHead(LIST &amp;L, NODE *p) {
+    <span class="cm">// rỗng: pHead = pTail = p</span>
+    if (!L.pHead) L.pHead = L.pTail = p;
+    else { p-&gt;pNext = L.pHead; L.pHead = p; }
+}
+void AddTail(LIST &amp;L, NODE *p) {
+    <span class="cm">// PHẢI cập nhật pTail</span>
+    if (!L.pHead) L.pHead = L.pTail = p;
+    else { L.pTail-&gt;pNext = p; L.pTail = p; }
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>DSLK — duyệt, tìm, thêm sau X</h3>
+<pre><code>void Traverse(LIST L) {
+    <span class="cm">// template duyệt mọi bài xử lý DSLK</span>
+    for (NODE *p = L.pHead; p; p = p-&gt;pNext)
+        cout &lt;&lt; p-&gt;info &lt;&lt; ' ';
+}
+NODE *searchNode(LIST L, int x) {
+    for (NODE *p = L.pHead; p; p = p-&gt;pNext)
+        if (p-&gt;info == x) return p;
+    return NULL;
+}
+void add_Y_after_X(LIST &amp;L, int Y, int X) {
+    <span class="cm">// Q là pTail thì pTail phải trỏ sang p</span>
+    NODE *Q = searchNode(L, X);
+    if (Q == NULL) return;
+    NODE *p = CreateNode(Y);
+    p-&gt;pNext = Q-&gt;pNext;
+    Q-&gt;pNext = p;
+    if (L.pTail == Q) L.pTail = p;
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>DSLK — xóa đầu, xóa X</h3>
+<pre><code>void RemoveHead(LIST &amp;L) {
+    <span class="cm">// xóa hết → pTail = NULL, đừng quên</span>
+    if (!L.pHead) return;
+    NODE *p = L.pHead; L.pHead = p-&gt;pNext; delete p;
+    if (!L.pHead) L.pTail = NULL;
+}
+bool RemoveX(LIST &amp;L, int x) {
+    <span class="cm">// giữ prev; x ở pTail → pTail = prev</span>
+    NODE *prev = NULL, *p = L.pHead;
+    while (p &amp;&amp; p-&gt;info != x) { prev = p; p = p-&gt;pNext; }
+    if (!p) return false;
+    if (!prev) L.pHead = p-&gt;pNext;
+    else prev-&gt;pNext = p-&gt;pNext;
+    if (p == L.pTail) L.pTail = prev;
+    delete p; return true;
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>Đa thức — struct &amp; Input</h3>
+<pre><code>struct DONTHUC { float HeSo; int SoMu; };
+struct PNODE { DONTHUC info; PNODE *pNext; };
+struct DATHUC { PNODE *pHead, *pTail; };
+
+PNODE *CreateNode(DONTHUC x) {
+    PNODE *p = new PNODE;
+    p-&gt;info = x; p-&gt;pNext = NULL; return p;
+}
+void AddTail(DATHUC &amp;L, PNODE *p) {
+    if (!L.pHead) L.pHead = L.pTail = p;
+    else { L.pTail-&gt;pNext = p; L.pTail = p; }
+}
+void CreateEmptyDATHUC(DATHUC &amp;poly) {
+    poly.pHead = poly.pTail = NULL;
+}
+DONTHUC Input(float heso, int somu) {
+    DONTHUC d; d.HeSo = heso; d.SoMu = somu;
+    return d;
+}
+void Input(DATHUC &amp;poly) {
+    <span class="cm">// đề cho: số mũ GIẢM dần, AddTail giữ thứ tự</span>
+    CreateEmptyDATHUC(poly);
+    int n; cin &gt;&gt; n;
+    for (int i = 0; i &lt; n; i++) {
+        float hs; int sm; cin &gt;&gt; hs &gt;&gt; sm;
+        AddTail(poly, CreateNode(Input(hs, sm)));
+    }
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>Đa thức — Sum (đề Câu 9)</h3>
+<pre><code>DATHUC Sum(DATHUC poly1, DATHUC poly2) {
+    <span class="cm">// merge theo số mũ; hs == 0 thì BỎ đơn thức</span>
+    DATHUC kq; CreateEmptyDATHUC(kq);
+    PNODE *p = poly1.pHead, *q = poly2.pHead;
+    while (p &amp;&amp; q) {
+        if (p-&gt;info.SoMu &gt; q-&gt;info.SoMu) {
+            AddTail(kq, CreateNode(p-&gt;info)); p = p-&gt;pNext;
+        } else if (p-&gt;info.SoMu &lt; q-&gt;info.SoMu) {
+            AddTail(kq, CreateNode(q-&gt;info)); q = q-&gt;pNext;
+        } else {
+            float hs = p-&gt;info.HeSo + q-&gt;info.HeSo;
+            if (hs != 0)
+                AddTail(kq, CreateNode(Input(hs, p-&gt;info.SoMu)));
+            p = p-&gt;pNext; q = q-&gt;pNext;
+        }
+    }
+    for (; p; p = p-&gt;pNext) AddTail(kq, CreateNode(p-&gt;info));
+    for (; q; q = q-&gt;pNext) AddTail(kq, CreateNode(q-&gt;info));
+    return kq;
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>BST — struct, chèn, tìm</h3>
+<pre><code>struct TNODE { int key; TNODE *pLeft, *pRight; };
+typedef TNODE *TREE;
+
+void InsertNode(TREE &amp;T, int x) {
+    <span class="cm">// x == T-&gt;key ⇒ KHÔNG chèn</span>
+    if (T == NULL) { T = new TNODE{x, NULL, NULL}; return; }
+    if (x &lt; T-&gt;key) InsertNode(T-&gt;pLeft, x);
+    else if (x &gt; T-&gt;key) InsertNode(T-&gt;pRight, x);
+}
+TNODE *SearchNode(TREE T, int x) {
+    while (T &amp;&amp; T-&gt;key != x)
+        T = (x &lt; T-&gt;key) ? T-&gt;pLeft : T-&gt;pRight;
+    return T;
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>BST — 6 phép duyệt bằng một hàm</h3>
+<pre><code>void Traverse(TREE T, const string &amp;order) {
+    <span class="cm">// order = "NLR","LNR","LRN","NRL","RNL","RLN"</span>
+    if (!T) return;
+    for (char c : order) {
+        if (c == 'N') cout &lt;&lt; T-&gt;key &lt;&lt; ' ';
+        else if (c == 'L') Traverse(T-&gt;pLeft, order);
+        else Traverse(T-&gt;pRight, order);
+    }
+}</code></pre>
+<p>Nhớ: <strong>NLR</strong> tiền tự, <strong>LNR</strong> trung tự (tăng dần), <strong>LRN</strong> hậu tự; chữ <code>R</code> trước <code>L</code> = duyệt ngược (RNL cho khóa giảm dần).</p>
+</div>
+
+<div class="card">
+<h3>BST — đếm, lá, tổng theo điều kiện</h3>
+<pre><code>int CountNode(TREE T) {
+    return T ? 1 + CountNode(T-&gt;pLeft)
+               + CountNode(T-&gt;pRight) : 0;
+}
+int CountLeaf(TREE T) {
+    if (!T) return 0;
+    if (!T-&gt;pLeft &amp;&amp; !T-&gt;pRight) return 1;
+    return CountLeaf(T-&gt;pLeft) + CountLeaf(T-&gt;pRight);
+}
+int SumEven(TREE T) { <span class="cm">// template: đổi điều kiện &amp; phép cộng</span>
+    if (!T) return 0;
+    return (T-&gt;key % 2 == 0 ? T-&gt;key : 0)
+         + SumEven(T-&gt;pLeft) + SumEven(T-&gt;pRight);
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>BST — chiều cao, in mức k</h3>
+<pre><code>int Height(TREE T) {
+    <span class="cm">// cây rỗng cao 0; node = 1 + max(2 con)</span>
+    if (!T) return 0;
+    return 1 + max(Height(T-&gt;pLeft), Height(T-&gt;pRight));
+}
+void PrintLevel(TREE T, int k) {
+    <span class="cm">// mức gốc = 0; k == 0 thì in node hiện tại</span>
+    if (!T) return;
+    if (k == 0) { cout &lt;&lt; T-&gt;key &lt;&lt; ' '; return; }
+    PrintLevel(T-&gt;pLeft, k - 1);
+    PrintLevel(T-&gt;pRight, k - 1);
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>BST — chẵn lớn nhất (đề Câu 10)</h3>
+<pre><code>int EvenMax(TNODE *Root) {
+    <span class="cm">// R-N-L: chẵn ĐẦU TIÊN gặp là lớn nhất</span>
+    if (Root == NULL) return -1; <span class="cm">// -1 lẻ: không nhầm với khóa chẵn</span>
+    int r = EvenMax(Root-&gt;pRight);
+    if (r != -1) return r;
+    if (Root-&gt;key % 2 == 0) return Root-&gt;key;
+    return EvenMax(Root-&gt;pLeft);
+}</code></pre>
+<p>BST xóa: đề chỉ yêu cầu <strong>vẽ tay</strong> — node 2 con thay bằng <em>nhỏ nhất cây con phải</em> (kể cả mirror: lớn nhất cây con trái). Xem <a href="../reference/b-tree-va-bang-bam.html">B-Tree &amp; Bảng băm</a> cho phần vẽ tay B-Tree.</p>
+</div>
+
+</div>
+
+<div class="source"><p>Đối chiếu: <em>Giáo trình CTDL&amp;GT</em> — Trần Hạnh Nhi, Dương Anh Đức (phong cách mã LAI, QuickSort phần tử giữa, Shift/CreateHeap). Tra cứu thuật ngữ: <a href="../reference/glossary.html">Thuật ngữ</a> · độ phức tạp: <a href="../reference/do-phuc-tap-va-dem.html">Độ phức tạp &amp; đếm</a>.</p></div>
+</main>
+</body>
+</html>

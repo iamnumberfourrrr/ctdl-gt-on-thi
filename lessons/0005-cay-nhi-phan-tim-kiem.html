@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 · Cây nhị phân tìm kiếm (BST) — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js" defer></script>
+<script src="../assets/tree.js" defer></script>
+</head>
+<body>
+<main>
+<nav class="crumbs">
+  <a href="../index.html">← Lộ trình ôn</a>
+  <a href="../reference/glossary.html">Thuật ngữ</a>
+  <a href="../reference/code-mau-cpp.html">Code mẫu C++</a>
+</nav>
+
+<p class="kicker">Bài 05 · ~15 phút · Câu 2 (1.5đ) + Câu 10 (0.5đ) đề mẫu</p>
+<h1>Cây nhị phân tìm kiếm (BST)</h1>
+<p class="subtitle">Vẽ đúng cây từ dãy chèn, ghi đủ 6 kiểu duyệt, xóa bằng thế mạng — và viết tay cả loạt hàm đệ quy.</p>
+
+<div class="goal"><strong>Thắng lợi của bài:</strong> từ một dãy chìn bất kỳ, vẽ đúng BST, ghi được cả 6 kiểu duyệt (NLR, LNR, LRN, NRL, RNL, RLN), vẽ lại cây sau khi xóa (thế mạng), và viết tay <code>InsertNode</code>, <code>SearchNode</code>, đếm node / đếm lá / tổng khóa theo điều kiện, chiều cao, in theo mức, <code>EvenMax</code>.</div>
+
+<div class="callout exam">
+<p><strong>Câu 2</strong> (1.5đ): cho dãy 12 giá trị <strong>40, 50, 4, 30, 45, 60, 20, 10, 15, 3, 90, 70</strong>. (a) Vẽ cây BST T1 sau khi thêm lần lượt từ trái sang phải (T1 rỗng ban đầu). (b) Cho biết kết quả duyệt T1 theo thứ tự <strong>Right Left Node (RLN)</strong>. (c) Vẽ lại T1 sau khi xóa lần lượt <strong>60</strong> và <strong>4</strong> sao cho T1 vẫn là BST — <em>nút thay thế được chọn (nếu có) là giá trị nhỏ nhất nhưng lớn hơn giá trị cần xóa</em>.</p>
+</div>
+
+<h2>1. Chèn &amp; tìm: khóa nhỏ qua trái, khóa lớn qua phải</h2>
+<p>Chèn mỗi khóa: từ gốc đi xuống — khóa mới <strong>nhỏ hơn</strong> node hiện tại thì rẽ <strong>trái</strong>, <strong>lớn hơn</strong> thì rẽ <strong>phải</strong>, đến chỗ trống thì gắn vào. Mỗi khóa chỉ có <em>một</em> đường đi, nên vẽ nhanh bằng mắt.</p>
+<figure class="tree" data-kind="bst" data-insert="40,50,4,30,45,60,20,10,15,3,90,70">
+<figcaption>T1 — câu 2a: 40 là gốc; 50 sang phải, 4 sang trái; 30 nằm bên phải của 4; … Cây con trái sâu: 4 → 30 → 20 → 10 → 15.</figcaption>
+</figure>
+<p>Hai hàm nền cho mọi câu code BST — <em>thuộc lòng</em>:</p>
+<pre><code>struct TNODE { int key; TNODE *pLeft, *pRight; };
+typedef TNODE *TREE;
+
+void InsertNode(TREE &amp;T, int x) {
+    if (T == NULL) { T = new TNODE{x, NULL, NULL}; return; }
+    if (x &lt; T-&gt;key) InsertNode(T-&gt;pLeft, x);
+    else if (x &gt; T-&gt;key) InsertNode(T-&gt;pRight, x);
+}
+
+TNODE *SearchNode(TREE T, int x) {
+    while (T &amp;&amp; T-&gt;key != x)
+        T = (x &lt; T-&gt;key) ? T-&gt;pLeft : T-&gt;pRight;
+    return T;   // NULL: không có x
+}</code></pre>
+<p>Tìm kiếm đi cùng một đường như chèn: mỗi bước loại hẳn một nhánh, nên số bước nhiều nhất bằng chiều cao cây.</p>
+
+<h2>2. Sáu thứ tự duyệt — mẹo đọc ngược</h2>
+<p>Mỗi kiểu duyệt chỉ là một bộ ba chữ: <strong>N</strong> = node (gốc), <strong>L</strong> = left (trái), <strong>R</strong> = right (phải), viết theo đúng thứ tự gọi. Toàn bộ 6 kiểu trên T1:</p>
+<table class="grid">
+<tr><th>Thứ tự</th><th>Kết quả trên T1</th></tr>
+<tr><td>NLR (tiền tự)</td><td>40 4 3 30 20 10 15 50 45 60 90 70</td></tr>
+<tr><td>LNR (trung tự)</td><td>3 4 10 15 20 30 40 45 50 60 70 90</td></tr>
+<tr><td>LRN (hậu tự)</td><td>3 15 10 20 30 4 45 70 90 60 50 40</td></tr>
+<tr><td>NRL</td><td>40 50 60 90 70 45 4 30 20 10 15 3</td></tr>
+<tr><td>RNL</td><td>90 70 60 50 45 40 30 20 15 10 4 3</td></tr>
+<tr><td>RLN</td><td>70 90 60 45 50 15 10 20 30 3 4 40</td></tr>
+</table>
+<p>Hai phao cứu sinh khi làm đề:<span class="sidenote">Cả 6 dòng trên và hai đẳng thức dưới đều đã kiểm bằng bộ mô phỏng của bài (<code>assets/tree.js</code>) trên T1 và 800 cây BST ngẫu nhiên.</span></p>
+<ol class="steps">
+<li><strong>RLN = NLR đọc ngược</strong> (viết NLR — kiểu dễ viết nhất khi nhìn cây vẽ — rồi đọc từ phải sang trái). Tương tự <strong>LRN = NRL đọc ngược</strong>.</li>
+<li>Trên BST, <strong>LNR luôn ra dãy tăng dần</strong> và RNL ra dãy giảm dần — kiểm tra cây mình vừa vẽ trong 5 giây.<span class="sidenote">Minh họa từng bước chèn/xóa/duyệt: <a href="https://visualgo.net/en/bst">VisuAlgo — Binary Search Tree</a> (NUS), mục Inorder/Preorder/Postorder Traversal.</span></li>
+</ol>
+
+<div class="callout trap">
+<p>RLN <strong>không</strong> phải LNR đọc ngược. Trên T1, LNR đọc ngược cho <code>90 70 60 50 45 40 30 20 15 10 4 3</code> — đó là RNL, vẫn khác RLN thật (<code>70 90 60 45 50 …</code>). Chỉ hai đẳng thức đúng là RLN = NLR-đọc-ngược và LRN = NRL-đọc-ngược.</p>
+</div>
+
+<h2>3. Xóa (chỉ cần vẽ tay): lá — 1 con — 2 con</h2>
+<p>Đề <em>không</em> đòi cài đặt xóa BST — chỉ vẽ. Ba trường hợp:</p>
+<ol class="steps">
+<li><strong>Node lá</strong>: bỏ hẳn (cha trỏ NULL).</li>
+<li><strong>Một con</strong>: cha nối thẳng xuống con duy nhất của node bị xóa.</li>
+<li><strong>Hai con</strong>: thay node bằng <strong>phần tử thế mạng = nhỏ nhất cây con phải</strong> (đúng nguyên văn đề: "giá trị nhỏ nhất nhưng lớn hơn giá trị cần xóa" — đi sang phải một bước rồi rẽ trái đến cùng), rồi xóa node thế mạng ở vị trí cũ. Cách đối xứng (lớn nhất cây con trái) vẫn cho BST đúng nhưng <em>không</em> theo quy ước chấm này.</li>
+</ol>
+<figure class="tree" data-kind="bst" data-insert="40,50,4,30,45,60,20,10,15,3,90,70" data-delete="60,4">
+<figcaption>T1 sau khi xóa 60 rồi 4 (câu 2c): 60 có 1 con ⇒ 90 thế chỗ; 4 có 2 con ⇒ thế mạng là 10.</figcaption>
+</figure>
+<p>Kiểm tra bằng NLR (viết rồi đọc ngược cho RLN): sau hai lần xóa, NLR = <code>40 10 3 30 20 15 50 45 90 70</code>, LNR = <code>3 10 15 20 30 40 45 50 70 90</code> — vẫn tăng dần, cây còn đúng BST.</p>
+
+<h2>4. Mẫu đệ quy: xử lý node + gọi trái + gọi phải</h2>
+<p>Gần như mọi hàm "thao tác khác" trên cây là một khuôn duy nhất: <em>if cây rỗng trả giá trị mốc; ngược lại tính node hiện tại + gọi đệ quy trái + gọi đệ quy phải</em>.</p>
+<pre><code>int CountNode(TREE T) { return T ? 1 + CountNode(T-&gt;pLeft) + CountNode(T-&gt;pRight) : 0; }
+
+int CountLeaf(TREE T) {
+    if (!T) return 0;
+    if (!T-&gt;pLeft &amp;&amp; !T-&gt;pRight) return 1;      // lá: không có con
+    return CountLeaf(T-&gt;pLeft) + CountLeaf(T-&gt;pRight);
+}
+
+int SumEven(TREE T) {                            // tổng khóa theo điều kiện: chẵn
+    if (!T) return 0;
+    return (T-&gt;key % 2 == 0 ? T-&gt;key : 0) + SumEven(T-&gt;pLeft) + SumEven(T-&gt;pRight);
+}
+
+int Height(TREE T) { return T ? 1 + max(Height(T-&gt;pLeft), Height(T-&gt;pRight)) : 0; }
+
+void PrintLevel(TREE T, int k) {                 // in các node ở mức k (gốc ở mức 0)
+    if (!T) return;
+    if (k == 0) { cout &lt;&lt; T-&gt;key &lt;&lt; ' '; return; }
+    PrintLevel(T-&gt;pLeft, k - 1);
+    PrintLevel(T-&gt;pRight, k - 1);
+}</code></pre>
+<p>Chạy cả bộ trên T1 (tính bằng bộ mô phỏng của bài, đối chiếu C++ biên dịch chạy):</p>
+<table>
+<tr><th>Hàm</th><th>Kết quả trên T1</th></tr>
+<tr><td><code>CountNode</code></td><td>12</td></tr>
+<tr><td><code>CountLeaf</code></td><td>4 — lá là 3, 15, 45, 70</td></tr>
+<tr><td><code>SumEven</code></td><td>374</td></tr>
+<tr><td><code>Height</code></td><td>6 (đường 40 → 4 → 30 → 20 → 10 → 15)</td></tr>
+<tr><td><code>PrintLevel(T, 0…5)</code></td><td>40 / 4 50 / 3 30 45 60 / 20 90 / 10 70 / 15</td></tr>
+</table>
+
+<h2>5. Câu 10 · EvenMax: khai thác thứ tự BST</h2>
+<div class="callout exam">
+<p><strong>Câu 10</strong> (0.5đ): viết hàm <code>int EvenMax(TNODE *Root)</code> nhận Root là con trỏ đến gốc của <strong>cây nhị phân tìm kiếm</strong>, trả lại giá trị key <strong>chẵn lớn nhất</strong> trong các nút của cây. Cho sẵn <code>struct TNODE { int key; TNODE* pLeft; TNODE* pRight; }; typedef TNODE* TREE;</code></p>
+</div>
+<p>Không cần duyệt hết cây: duyệt <strong>R − N − L</strong> (giảm dần) thì <em>key chẵn đầu tiên gặp</em> chính là chẵn lớn nhất. Trả về <strong>−1</strong> khi không tìm thấy — an toàn vì −1 là số lẻ, không thể nhầm với một key chẵn thật.</p>
+<pre><code>int EvenMax(TNODE *Root) {
+    if (Root == NULL) return -1;          // −1 lẻ ⇒ không nhầm với key chẵn
+    int r = EvenMax(Root-&gt;pRight);        // phải trước: khóa lớn hơn
+    if (r != -1) return r;                // đã tìm thấy bên phải
+    if (Root-&gt;key % 2 == 0) return Root-&gt;key;
+    return EvenMax(Root-&gt;pLeft);          // node này lẻ ⇒ thử bên trái
+}</code></pre>
+<p>Ví dụ: cây chèn 50, 30, 70, 20, 40, 60, 75 — duyệt RNL: 75 (lẻ) → 70 (chẵn) ⇒ trả về <strong>70</strong>. Cây toàn khóa lẻ (5, 3, 9, 7) ⇒ trả về −1.</p>
+
+<div class="callout trap">
+<p><strong>EvenMax không phải lúc nào cũng là node phải cùng</strong> — node phải cùng có thể lẻ (ví dụ trên: phải cùng 75 lẻ, đáp án là cha của nó, 70). Và khi xóa node 2 con (mục 3), đừng lấy nhầm <em>lớn nhất cây con trái</em> — đề chấm theo <em>nhỏ nhất cây con phải</em>.</p>
+</div>
+
+<h2>6. Lab: tự chấm cây mình vẽ tay</h2>
+<div class="tree-lab" data-kind="bst" data-insert="40,50,4,30,45,60,20,10,15,3,90,70"></div>
+<p>Lab mở sẵn dãy câu 2. Gõ <code>60</code> rồi bấm <strong>Xóa</strong>, gõ <code>4</code> rồi <strong>Xóa</strong> — đối chiếu câu 2c với hình mình vẽ. Dòng dưới lab luôn hiện NLR / LNR / LRN / RLN của cây hiện tại. Bấm <strong>Về ban đầu</strong> để làm lại từ đầu, hoặc <strong>Cây rỗng</strong> rồi tự chèn dãy khác.</p>
+
+<h2>Luyện tập — tự nhớ lại, đừng cuộn lên</h2>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">Câu 2a: cây T1 rỗng, chèn lần lượt 40, 50, 4, 30, 45, 60, 20, 10, 15, 3, 90, 70. Vẽ T1 ra giấy.</p>
+  <div class="q-explain">
+    <p>40 là gốc; 50 &gt; 40 sang phải; 4 &lt; 40 sang trái; 30 &gt; 4 nằm bên phải của 4; 20 &lt; 30, 10 &lt; 20, 15 &gt; 10 treo bên phải của 10; 3 &lt; 4 bên trái của 4; nhánh phải: 45 &lt; 50, 60 &gt; 50, 90 &gt; 60, 70 &lt; 90.</p>
+    <figure class="tree" data-kind="bst" data-insert="40,50,4,30,45,60,20,10,15,3,90,70"><figcaption>T1 — đối chiếu bản vẽ của bạn.</figcaption></figure>
+  </div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Câu 2b: kết quả duyệt T1 theo RLN (các khóa cách nhau khoảng trắng)?</p>
+  <p><span class="blank" data-accept='["70 90 60 45 50 15 10 20 30 3 4 40"]' data-width="32"></span></p>
+  <div class="q-explain">Viết NLR (40 4 3 30 20 10 15 50 45 60 90 70) rồi đọc ngược từ phải sang. Tự kiểm: LNR phải tăng dần, RNL phải giảm dần.</div>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">Câu 2c: từ T1, xóa 60 rồi xóa 4. Vẽ lại cây.</p>
+  <div class="q-explain"><p>60 có đúng 1 con (90) ⇒ cha 50 nối thẳng xuống 90. 4 có 2 con ⇒ thế mạng = nhỏ nhất cây con phải của 4: sang phải tới 30, rẽ trái đến cùng — là 10; đưa 10 lên chỗ 4 rồi bỏ node 10 cũ. NLR kiểm tra: <code>40 10 3 30 20 15 50 45 90 70</code> (đối chiếu hình cuối mục 3).</p></div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Chèn lần lượt 25, 15, 50, 10, 22, 35, 70, 5, 12, 30, 40, 60 vào BST rỗng. Ghi NLR rồi LRN của cây nhận được.</p>
+  <p>NLR: <span class="blank" data-accept='["25 15 10 5 12 22 50 35 30 40 70 60"]' data-width="32"></span></p>
+  <p>LRN: <span class="blank" data-accept='["5 12 10 22 15 30 40 35 60 70 50 25"]' data-width="32"></span></p>
+  <div class="q-explain">Vẽ cây rồi viết NRL (25 50 70 60 35 40 30 15 22 10 12 5) và đọc ngược ra LRN. Cách khác: LRN = trái → phải → gốc, gạch từng cây con từ dưới lên.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Theo quy ước của đề, khi xóa node có 2 con trên BST, phần tử thế mạng là:</p>
+  <ol class="q-options">
+    <li><button data-correct>nhỏ nhất cây con phải</button></li>
+    <li><button>lớn nhất cây con phải</button></li>
+    <li><button>nhỏ nhất cây con trái</button></li>
+    <li><button>lớn nhất cây con trái</button></li>
+  </ol>
+  <div class="q-explain">Nguyên văn đề: "giá trị nhỏ nhất nhưng lớn hơn giá trị cần xóa" — sang phải một bước rồi rẽ trái đến cùng. Lớn nhất cây con trái cũng cho BST đúng nhưng không theo quy ước chấm của đề này.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Điền hai dòng còn thiếu của EvenMax:</p>
+  <pre><code>int EvenMax(TNODE *Root) {
+    if (Root == NULL) return -1;
+    int r = <span class="blank" data-accept='["EvenMax(Root->pRight)"]' data-width="22"></span>;
+    if (r != -1) return r;
+    if (<span class="blank" data-accept='["Root->key % 2 == 0","Root->key%2==0"]' data-width="16"></span>) return Root-&gt;key;
+    return EvenMax(Root-&gt;pLeft);
+}</code></pre>
+  <div class="q-explain">Đệ quy phải trước (khóa lớn hơn); bên phải không có chẵn thì kiểm chính node này; node lẻ thì mới sang trái. Trả về −1 khi cả cây không có key chẵn.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Trên T1 (cây câu 2): Height(T) là bao nhiêu, và PrintLevel(T, 3) in ra những khóa nào (gốc ở mức 0)?</p>
+  <p>Height: <span class="blank" data-accept="6"></span> &nbsp; PrintLevel(T, 3): <span class="blank" data-accept='["20 90"]' data-width="8"></span></p>
+  <div class="q-explain">Đường dài nhất 40 → 4 → 30 → 20 → 10 → 15 gồm 6 node ⇒ chiều cao 6. Mức 3 (tính từ 0) chứa 20 và 90 — xem bảng ở mục 4.</div>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">Cây BST chèn lần lượt 50, 30, 70, 20, 40, 60, 75. Chạy tay EvenMax: hàm trả về giá trị nào, và vì sao không phải node phải cùng?</p>
+  <div class="q-explain"><p>Trả về <strong>70</strong>. Theo RNL (giảm dần): 75 (lẻ, bỏ) → 70 (chẵn, dừng). Node phải cùng 75 lẻ nên không được chọn; 70 là cha của nó. Nếu cây toàn khóa lẻ thì kết quả là −1.</p></div>
+</div>
+
+<h3>Ôn lại bài trước</h3>
+
+<div class="q">
+  <p class="q-prompt">DSLK đơn (Bài 04): chèn node p vào ngay sau node Q. Điền dòng đầu tiên:</p>
+  <pre><code>p-&gt;pNext = <span class="blank" data-accept='["Q->pNext"]' data-width="10"></span>;
+Q-&gt;pNext = p;</code></pre>
+  <div class="q-explain">Nối p vào phần sau của Q <em>trước</em> (p-&gt;pNext = Q-&gt;pNext), rồi mới cho Q trỏ tới p — làm ngược thứ tự thì mất phần còn lại của danh sách. Nếu Q đang là pTail thì phải cập nhật L.pTail = p.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Selection Sort (Bài 02) gọi swap <em>vô điều kiện</em> cuối mỗi vòng i. Trên mảng 10 phần tử đã tăng dần, số lần gọi swap là:</p>
+  <p><span class="blank" data-accept="9"></span></p>
+  <div class="q-explain">Có n − 1 = 9 vòng i và mỗi vòng gọi swap một lần bất kể có đổi hay không — đúng bẫy câu 3 đề mẫu (đừng trả 0 vì "mảng sẵn thứ tự").</div>
+</div>
+
+<div class="source">
+<p><a href="https://visualgo.net/en/bst">VisuAlgo — Binary Search Tree</a> (NUS): bấm BST → Insert / Remove / Inorder Traversal, chạy từng bước trong ~10 phút để đối chiếu cách vẽ tay. Sách đối chiếu: chương Cây — <em>Giáo trình CTDL&amp;GT</em>, Trần Hạnh Nhi, Dương Anh Đức.</p>
+</div>
+
+<div class="ask"><p>Chỗ nào chưa rõ — ví dụ đề bắt "duyệt theo mức" bằng hàng đợi thay vì hàm PrintLevel(k), hay quy ước thế mạng nếu đề khác năm sau — cứ hỏi agent ngay trong cuộc trò chuyện.</p></div>
+
+<nav class="pager">
+  <a href="0004-danh-sach-lien-ket.html">← Bài 04 · Danh sách liên kết</a>
+  <a href="0006-b-tree.html">Bài 06 · B-Tree →</a>
+</nav>
+</main>
+</body>
+</html>

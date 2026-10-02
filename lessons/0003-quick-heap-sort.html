@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Quick &amp; Heap Sort — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js" defer></script>
+</head>
+<body>
+<main>
+<nav class="crumbs">
+  <a href="../index.html">← Lộ trình ôn</a>
+  <a href="../reference/glossary.html">Thuật ngữ</a>
+  <a href="../reference/do-phuc-tap-va-dem.html">Bảng độ phức tạp</a>
+  <a href="../reference/code-mau-cpp.html">Code mẫu C++</a>
+</nav>
+
+<p class="kicker">Bài 03 · ~14 phút · Câu 3 đề mẫu (điền code, chạy tay)</p>
+<h1>Quick &amp; Heap Sort</h1>
+<p class="subtitle">Hai thuật toán đếm nhiều điểm nhất: viết tay đúng chuẩn sách, và chạy tay từng bước không sai một ô.</p>
+
+<div class="goal"><strong>Thắng lợi của bài:</strong> viết tay nguyên hai hàm <code>QuickSort</code> (pivot giữa, do-while) và <code>HeapSort</code> (<code>Shift</code>/<code>CreateHeap</code>), và trả lời được kiểu câu "hỏi 1 chi tiết": pivot lần gọi đầu, mảng sau <code>CreateHeap</code>, số lần swap của lần phân hoạch đầu.</div>
+
+<div class="callout exam">
+<p>(Kiểu câu 3 đề mẫu) Cho mảng a gồm n số nguyên. (a) Điền vào chỗ trống để hàm <code>QuickSort</code> sau chạy đúng; (b) cho biết giá trị pivot ở lần gọi đầu tiên; (c) viết mảng a sau khi kết thúc lần phân hoạch đầu tiên và số lần đổi chỗ (swap) trong lần đó.</p>
+</div>
+
+<h2>1. QuickSort: pivot giữa, do-while — nguyên bản phải thuộc</h2>
+<pre><code>void QuickSort(int a[], int left, int right) {
+    int i = left, j = right, x = a[(left + right) / 2];
+    do {
+        while (a[i] &lt; x) i++;
+        while (a[j] &gt; x) j--;
+        if (i &lt;= j) {
+            swap(a[i], a[j]);
+            i++; j--;
+        }
+    } while (i &lt; j);
+    if (left &lt; j) QuickSort(a, left, j);
+    if (i &lt; right) QuickSort(a, i, right);
+}</code></pre>
+<p>Ghi nhớ cấu trúc: <strong>một</strong> pivot x lấy ở giữa <code>(left+right)/2</code>; hai con trỏ i chạy phải, j chạy trái; <code>i &lt;= j</code> thì swap rồi cùng bước thêm một nhịp; dừng khi <code>i &gt;= j</code>; đệ quy hai nửa <code>(left, j)</code> và <code>(i, right)</code>.</p>
+
+<h2>2. Chạy tay lần phân hoạch đầu: a = 5 9 2 8 1 7 4 6</h2>
+<p>Gọi <code>QuickSort(a, 0, 7)</code>: x = a[(0+7)/2] = <strong>a[3] = 8</strong>. Bảng từng bước (trạng thái mảng <em>sau</em> mỗi lần swap):</p>
+<table class="grid">
+<thead><tr><th>Bước</th><th>i</th><th>j</th><th>Việc xảy ra</th><th>Mảng sau</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>1</td><td>7</td><td>a[1]=9 ≥ 8 dừng; a[7]=6 ≤ 8 dừng; swap(1,7)</td><td>5 6 2 8 1 7 4 9</td></tr>
+<tr><td>2</td><td>3</td><td>6</td><td>a[3]=8 dừng (không &lt; 8); a[6]=4 dừng; swap(3,6)</td><td>5 6 2 4 1 7 8 9</td></tr>
+<tr><td>3</td><td>6</td><td>5</td><td>i &gt; j ⇒ không swap; i &lt; j sai ⇒ thoát do-while</td><td>5 6 2 4 1 7 8 9</td></tr>
+</tbody>
+</table>
+<p>Kết thúc lần phân hoạch đầu: i = 6, j = 5, <strong>2 lần swap</strong>, mảng = <code>5 6 2 4 1 7 8 9</code>. Tiếp tục đệ quy <code>QuickSort(a, 0, 5)</code> và <code>QuickSort(a, 6, 7)</code>.</p>
+
+<div class="callout trap">
+<p>Bốn bẫy của câu này: (1) pivot là a[(left+right)/2] — chỉ số nguyên, mảng 8 phần tử (0..7) lấy a[3], <em>không phải</em> a[4]; (2) điều kiện swap là <code>i &lt;= j</code> (có dấu bằng); (3) sau swap phải <code>i++; j--;</code> nếu không vòng lặp quay lại chỗ cũ; (4) sau do-while là <code>while (i &lt; j)</code>, còn hai lời gọi đệ quy dùng j (bên trái) và i (bên phải) — đừng hoán đổi.</p>
+</div>
+
+<h2>3. HeapSort: heap cực đại, đếm từ 0</h2>
+<p>MảngHeap coi node i có con trái <code>2i+1</code>, con phải <code>2i+2</code>, cha <code>(i−1)/2</code>. Heap cực đại (max-heap): cha ≥ mọi con ⇒ a[0] là giá trị lớn nhất.</p>
+<pre><code>void Shift(int a[], int l, int r) {
+    int i = l, j = 2 * i + 1, x = a[i];
+    while (j &lt;= r) {
+        if (j &lt; r &amp;&amp; a[j] &lt; a[j + 1]) j++;   // chọn con lớn hơn
+        if (a[j] &lt;= x) break;                   // đúng trật tự thì dừng
+        a[i] = a[j]; i = j; j = 2 * i + 1;       // kéo con lên, đi xuống tiếp
+    }
+    a[i] = x;
+}
+void CreateHeap(int a[], int n) {
+    for (int l = n / 2 - 1; l &gt;= 0; l--) Shift(a, l, n - 1);
+}
+void HeapSort(int a[], int n) {
+    CreateHeap(a, n);
+    for (int r = n - 1; r &gt; 0; r--) {
+        swap(a[0], a[r]);      // đưa max về cuối
+        Shift(a, 0, r - 1);    // vun lại heap trên a[0..r-1]
+    }
+}</code></pre>
+<p><code>CreateHeap</code> duyệt node <strong>cuối lên</strong>: từ l = n/2 − 1 (node trong cuối cùng, có con đầu tiên) giảm dần về 0.</p>
+
+<h2>4. Chạy tay HeapSort: vẫn a = 5 9 2 8 1 7 4 6 (n = 8)</h2>
+<p><strong>CreateHeap</strong> — l chạy 3, 2, 1, 0 (n/2 − 1 = 3):</p>
+<table class="grid">
+<thead><tr><th>l</th><th>Shift làm gì</th><th>Mảng sau Shift</th></tr></thead>
+<tbody>
+<tr><td>3</td><td>a[3]=8 ≥ con a[7]=6 — không đổi</td><td>5 9 2 8 1 7 4 6</td></tr>
+<tr><td>2</td><td>a[2]=2 &lt; con trái a[5]=7 — kéo 7 lên</td><td>5 9 7 8 1 2 4 6</td></tr>
+<tr><td>1</td><td>a[1]=9 ≥ con (8, 1) — không đổi</td><td>5 9 7 8 1 2 4 6</td></tr>
+<tr><td>0</td><td>a[0]=5 rơi: 9 lên, rồi 8 lên, 5 xuống vị trí 8 cũ</td><td>9 8 7 6 1 2 4 5</td></tr>
+</tbody>
+</table>
+<p><strong>Sau CreateHeap: <code>9 8 7 6 1 2 4 5</code></strong> — kiểm tra: mọi cha ≥ con (9≥8,7; 8≥6,1; 7≥2,4). Hai lượt đổi chỗ đầu:</p>
+<table class="grid">
+<thead><tr><th>r</th><th>swap(a[0], a[r])</th><th>Shift(0, r−1)</th><th>Mảng sau</th></tr></thead>
+<tbody>
+<tr><td>7</td><td>9 ↔ 5</td><td>5 rơi xuống vị trí a[3]</td><td>8 6 7 5 1 2 4 <strong>9</strong></td></tr>
+<tr><td>6</td><td>8 ↔ 4</td><td>4 rơi: 7 lên, rồi 5 lên</td><td>7 6 4 5 1 2 <strong>8 9</strong></td></tr>
+</tbody>
+</table>
+<p>Phần đậm đã "xếp xong" ở cuối mảng; lặp tiếp r = 5…1 cho đến <code>1 2 4 5 6 7 8 9</code>.</p>
+
+<div class="callout trap">
+<p>Heap đếm từ <strong>0</strong>: con là 2i+1 / 2i+2 (bản 1-indexed trong một số sách là 2i / 2i+1 — đề UIT theo bản 0-indexed). <code>CreateHeap</code> bắt đầu ở n/2 − 1 chứ không phải n/2. Trong Shift, so sánh hai con để <em>chọn con lớn hơn</em> trước khi kéo lên. Sau swap(a[0], a[r]) phải Shift trên đoạn <code>0..r−1</code>, không phải cả mảng.</p>
+</div>
+
+<h2>5. Độ phức tạp — chỉ cần thuộc bảng</h2>
+<table>
+<thead><tr><th>Thuật toán</th><th>Tốt nhất / trung bình</th><th>Xấu nhất</th></tr></thead>
+<tbody>
+<tr><td>QuickSort</td><td>O(n log n)</td><td>O(n²) — phân hoạch lệch hẳn một bên (pivot luôn là min/max của đoạn)</td></tr>
+<tr><td>HeapSort</td><td>O(n log n)</td><td>O(n log n) — mọi trường hợp</td></tr>
+</tbody>
+</table>
+<p>Giáo viên chỉ yêu cầu <em>nhớ</em>, không giải thích, không tính toán. Bảng đầy đủ mọi thuật toán: <a href="../reference/do-phuc-tap-va-dem.html">Độ phức tạp &amp; đếm phép toán</a>.</p>
+
+<h2>Luyện tập — tự nhớ lại, đừng cuộn lên</h2>
+
+<div class="q">
+  <p class="q-prompt">Điền dòng lấy pivot theo đúng chuẩn sách giáo trình:</p>
+  <pre><code>int i = left, j = right, x = <span class="blank" data-accept='["a[(left + right) / 2]","a[(left+right)/2]","a[(left+right)/2]"]' data-width="22"></span>;</code></pre>
+  <div class="q-explain">Pivot = phần tử ở giữa đoạn đang xét: a[(left + right) / 2]. Đây là bản sách Trần Hạnh Nhi — Dương Anh Đức mà đề theo.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Điền hai lời gọi đệ quy cuối của QuickSort:</p>
+  <pre><code>if (left &lt; j) QuickSort(a, left, <span class="blank" data-accept='["j"]' data-width="3"></span>);
+if (i &lt; right) QuickSort(a, <span class="blank" data-accept='["i"]' data-width="3"></span>, right);</code></pre>
+  <div class="q-explain">Nửa trái là (left, j), nửa phải là (i, right) — j đứng bên trái, i đứng bên phải vì sau phân hoạch j đã lui xuống và i đã tiến lên.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">QuickSort(a, 0, 7) trên a = <code>5 9 2 8 1 7 4 6</code>. Giá trị pivot ở lần gọi đầu là:</p>
+  <p>Pivot: <span class="blank" data-accept="8"></span> &nbsp;·&nbsp; Số lần swap trong lần phân hoạch đầu: <span class="blank" data-accept="2"></span></p>
+  <div class="q-explain">x = a[(0+7)/2] = a[3] = 8. Hai lần swap: (1,7) rồi (3,6); bước 3 i=6 &gt; j=5 nên dừng.</div>
+</div>
+<div class="q">
+  <p class="q-prompt">Câu trên: viết mảng a ngay sau khi kết thúc lần phân hoạch đầu (các số cách nhau bởi dấu cách):</p>
+  <p><span class="blank" data-accept='["5 6 2 4 1 7 8 9"]' data-width="22"></span></p>
+  <div class="q-explain">5 6 2 4 1 7 8 9 — trái của j=5 đều ≤ 8 (trừ chính vùng pivot), từ i=6 trở đi đều ≥ 8. Hai phần tử cuối 8 9 đã về đúng vùng.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Với heap đếm từ 0: con trái và con phải của node i lần lượt là:</p>
+  <p>Con trái: <span class="blank" data-accept='["2*i+1","2i+1","2 * i + 1"]' data-width="8"></span> &nbsp;·&nbsp; Con phải: <span class="blank" data-accept='["2*i+2","2i+2","2 * i + 2"]' data-width="8"></span></p>
+  <div class="q-explain">0-indexed: 2i+1 và 2i+2; cha của i là (i−1)/2. Bản 1-indexed (2i, 2i+1) không dùng trong đề này.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">HeapSort trên a = <code>5 9 2 8 1 7 4 6</code> (n = 8). CreateHeap bắt đầu từ l = <span class="blank" data-accept="3"></span> ; mảng sau CreateHeap là:</p>
+  <p><span class="blank" data-accept='["9 8 7 6 1 2 4 5"]' data-width="22"></span></p>
+  <div class="q-explain">l = n/2 − 1 = 3. Sau CreateHeap được max-heap 9 8 7 6 1 2 4 5: a[0]=9 ≥ 8,7; a[1]=8 ≥ 6,1; a[2]=7 ≥ 2,4.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Tiếp câu trên: sau đúng 2 lượt swap(a[0], a[r]) + Shift (r = 7 rồi r = 6), mảng là:</p>
+  <p><span class="blank" data-accept='["7 6 4 5 1 2 8 9"]' data-width="22"></span></p>
+  <div class="q-explain">r=7: 9↔5 rồi 5 rơi xuống a[3] → 8 6 7 5 1 2 4 9. r=6: 8↔4 rồi 4 rơi (7 lên, 5 lên) → 7 6 4 5 1 2 8 9. Hai số lớn nhất 8, 9 đã về cuối.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Độ phức tạp xấu nhất của QuickSort và của HeapSort lần lượt là:</p>
+  <ol class="q-options">
+    <li><button data-correct>O(n²) và O(n log n)</button></li>
+    <li><button>O(n log n) và O(n²)</button></li>
+    <li><button>O(n²) và O(n²)</button></li>
+    <li><button>O(n log n) và O(n log n)</button></li>
+  </ol>
+  <div class="q-explain">QuickSort xấu nhất O(n²) khi mỗi lần phân hoạch đều lệch hẳn một bên (pivot luôn là min/max của đoạn). Với pivot ở giữa như code này, mảng đã có thứ tự lại chia đều — không phải trường hợp xấu. HeapSort luôn O(n log n) ở mọi trường hợp.</div>
+</div>
+
+<h3>Ôn lại bài trước</h3>
+
+<div class="q">
+  <p class="q-prompt">(Bài 02) Selection Sort chuẩn gọi swap vô điều kiện mỗi vòng i. Với n = 10, tổng số lần gọi swap là:</p>
+  <p><span class="blank" data-accept="9"></span></p>
+  <div class="q-explain">Mỗi vòng i (i = 0..n−2) gọi swap đúng một lần sau khi tìm min ⇒ n − 1 = 9 lần — đây là bẫy của câu 3 đề mẫu (9 lần swap trên mảng đã có thứ tự).</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">(Bài 01) Xấu nhất, tìm kiếm nhị phân trên mảng n = 8 tốn bao nhiêu lần so sánh <code>a[mid]==x</code>?</p>
+  <p><span class="blank" data-accept="4"></span></p>
+  <div class="q-explain">⌊log₂8⌋ + 1 = 4 — mỗi lần so sánh loại một nửa: 8 → 4 → 2 → 1.</div>
+</div>
+
+<div class="source">
+<p><a href="https://visualgo.net/en/sorting">VisuAlgo — Sorting</a> (chọn QUI và HEAP, chạy từng bước trên chính mảng 5 9 2 8 1 7 4 6 để tự kiểm tra; ~10 phút). Đối chiếu code với <em>Giáo trình CTDL&amp;GT</em> — Trần Hạnh Nhi, Dương Anh Đức.</p>
+</div>
+
+<div class="ask"><p>Chỗ nào chưa rõ — ví dụ cách đếm phép so sánh trong QuickSort khi đề hỏi, hay Shift khác vun đống "sift-down" ở chỗ nào — cứ hỏi agent ngay trong cuộc trò chuyện.</p></div>
+
+<nav class="pager">
+  <a href="0002-selection-insertion-sort.html">← Bài 02 · Selection &amp; Insertion Sort</a>
+  <a href="0004-danh-sach-lien-ket.html">Bài 04 · Danh sách liên kết →</a>
+</nav>
+</main>
+</body>
+</html>

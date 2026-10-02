@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Tìm kiếm &amp; đếm phép so sánh — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js" defer></script>
+</head>
+<body>
+<main>
+<nav class="crumbs">
+  <a href="../index.html">← Lộ trình ôn</a>
+  <a href="../reference/glossary.html">Thuật ngữ</a>
+  <a href="../reference/do-phuc-tap-va-dem.html">Bảng độ phức tạp</a>
+  <a href="../reference/code-mau-cpp.html">Code mẫu C++</a>
+</nav>
+
+<p class="kicker">Bài 01 · ~12 phút · Câu 1 đề mẫu (1.0đ)</p>
+<h1>Tìm kiếm &amp; đếm phép so sánh</h1>
+<p class="subtitle">Tuyến tính có tận dụng mảng tăng dần, nhị phân — và đếm đúng phép mà đề hỏi.</p>
+
+<div class="goal"><strong>Thắng lợi của bài:</strong> viết tay được hàm tìm kiếm tuyến tính <em>dừng sớm</em> trên mảng tăng dần, và nói ngay số lần so sánh <code>a[i]==x</code> khi x ở đầu / cuối / giữa mảng.</div>
+
+<div class="callout exam">
+<p>Cho mảng <em>a</em> gồm <em>n</em> số nguyên <strong>tăng dần</strong>. (a) Viết tìm kiếm tuyến tính <strong>có sử dụng điều kiện tăng dần</strong> — viết bản thường chỉ được 0.25/0.5đ. (b) Tính số lần so sánh <code>a[i]==x</code> khi x ở đầu, cuối, giữa mảng (chỉ nêu kết quả).</p>
+</div>
+
+<h2>1. Tuyến tính trên mảng tăng dần: dừng khi a[i] &gt; x</h2>
+<p>Bản thường duyệt đến hết mảng nếu không thấy x. Khi mảng tăng dần, gặp phần tử <em>lớn hơn</em> x là biết chắc phía sau không còn x — dừng luôn. Đó chính là "sử dụng điều kiện tăng dần" mà đề đòi.</p>
+<pre><code>int LinearSearch(int a[], int n, int x) {
+    for (int i = 0; i &lt; n <span class="hl">&amp;&amp; a[i] &lt;= x</span>; i++)   <span class="cm">// dừng sớm khi a[i] &gt; x</span>
+        if (a[i] == x) return i;                <span class="cm">// phép so sánh đề hỏi</span>
+    return -1;
+}</code></pre>
+
+<h2>2. Đếm phép so sánh <code>a[i]==x</code></h2>
+<p>Mỗi vòng lặp chạy thân đúng một lần ⇒ mỗi phần tử được xét tốn đúng <strong>1</strong> phép <code>a[i]==x</code>. Nếu x nằm ở chỉ số <em>k</em> (đếm từ 0) thì đã xét <em>k</em>+1 phần tử:</p>
+<table>
+<tr><th>Vị trí của x</th><th>Số lần <code>a[i]==x</code></th></tr>
+<tr><td>Đầu mảng (k = 0)</td><td><strong>1</strong></td></tr>
+<tr><td>Cuối mảng (k = n−1)</td><td><strong>n</strong></td></tr>
+<tr><td>Giữa mảng (k ≈ n/2)</td><td><strong>≈ n/2</strong> &nbsp;(chính xác: k+1; n lẻ ⇒ (n+1)/2)</td></tr>
+</table>
+<p>Không có x: chỉ các phần tử <code>≤ x</code> mới bị so sánh <code>==</code> — đó là lợi ích của dừng sớm.<span class="marginnote">Ví dụ a = 2 4 6 8, x = 5: chỉ xét 2 và 4 ⇒ 2 lần <code>==</code>; gặp 6 &gt; 5 thì vòng <code>for</code> dừng.</span></p>
+
+<div class="callout trap">
+<p>Đề đếm <em>một loại</em> phép so sánh. <code>i &lt; n</code> và <code>a[i] &lt;= x</code> cũng là phép so sánh nhưng <strong>không tính</strong> khi đề ghi rõ <code>a[i]==x</code>. Đọc kỹ đề đếm phép nào trước khi đếm. Câu "giữa mảng" an toàn nhất: ghi kết quả kèm công thức <em>k</em>+1.</p>
+</div>
+
+<h2>3. Nhị phân: mỗi lần so sánh loại nửa mảng</h2>
+<pre><code>int BinarySearch(int a[], int n, int x) {
+    int left = 0, right = n - 1;
+    while (left &lt;= right) {
+        int mid = (left + right) / 2;
+        if (a[mid] == x) return mid;
+        if (x &lt; a[mid]) right = mid - 1;   <span class="cm">// bỏ nửa phải</span>
+        else            left  = mid + 1;   <span class="cm">// bỏ nửa trái</span>
+    }
+    return -1;
+}</code></pre>
+<p>Chạy tay với a = <code>1 3 5 7 9 11 13</code> (n = 7), x = 1:</p>
+<table class="grid">
+<tr><th>Lần</th><th>left</th><th>right</th><th>mid</th><th>a[mid]</th><th>Kết luận</th></tr>
+<tr><td>1</td><td>0</td><td>6</td><td>3</td><td>7</td><td>1 &lt; 7 ⇒ right = 2</td></tr>
+<tr><td>2</td><td>0</td><td>2</td><td>1</td><td>3</td><td>1 &lt; 3 ⇒ right = 0</td></tr>
+<tr><td>3</td><td>0</td><td>0</td><td>0</td><td>1</td><td>tìm thấy</td></tr>
+</table>
+<p>3 lần <code>a[mid]==x</code>. Xấu nhất nhị phân tốn <strong>⌊log₂n⌋ + 1</strong> lần so sánh<span class="sidenote">Theo <a href="https://en.wikipedia.org/wiki/Binary_search#Performance">Wikipedia — Binary search, Performance</a>: xấu nhất ⌊log₂(n)+1⌋ vòng lặp so sánh.</span>; tốt nhất 1 lần (x nằm đúng ở <code>mid</code> đầu tiên).</p>
+
+<h2>4. Bảng phải thuộc</h2>
+<table>
+<tr><th>Thuật toán</th><th>Tốt nhất</th><th>Xấu nhất</th><th>Điều kiện</th></tr>
+<tr><td>Tuyến tính</td><td>O(1) — 1 lần</td><td>O(n) — n lần</td><td>không cần</td></tr>
+<tr><td>Nhị phân</td><td>O(1) — 1 lần</td><td>O(log n) — ⌊log₂n⌋+1 lần</td><td>mảng <strong>đã sắp thứ tự</strong></td></tr>
+</table>
+<p>Giáo viên ghi "O(c)" — chính là O(1), hằng số. Bảng đầy đủ: <a href="../reference/do-phuc-tap-va-dem.html">Độ phức tạp &amp; đếm phép toán</a>.</p>
+
+<h2>Luyện tập — tự nhớ lại, đừng cuộn lên</h2>
+
+<div class="q">
+  <p class="q-prompt">Điền điều kiện dừng sớm để hàm tận dụng mảng tăng dần:</p>
+  <pre><code>for (int i = 0; i &lt; n &amp;&amp; <span class="blank" data-accept='["a[i] <= x","a[i]<=x","x >= a[i]","x>=a[i]"]' data-width="12"></span>; i++)
+    if (a[i] == x) return i;</code></pre>
+  <div class="q-explain">Điều kiện <code>a[i] &lt;= x</code>: còn phần tử ≤ x thì còn hy vọng gặp x; gặp phần tử lớn hơn x là dừng. Dùng <code>a[i] &lt; x</code> là sai — vòng lặp dừng ngay khi a[i] == x mà chưa kịp so sánh.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Mảng tăng dần n = 10, dùng hàm ở trên. Số lần so sánh <code>a[i]==x</code> khi x = a[0], x = a[9], x = a[4]?</p>
+  <p>x = a[0]: <span class="blank" data-accept="1"></span> &nbsp; x = a[9]: <span class="blank" data-accept="10"></span> &nbsp; x = a[4]: <span class="blank" data-accept="5"></span></p>
+  <div class="q-explain">Công thức k+1: 0+1 = 1, 9+1 = 10, 4+1 = 5.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">a = <code>2 4 6 8 10 12</code>, x = 7 (không có trong mảng). Hàm dừng sớm thực hiện bao nhiêu lần <code>a[i]==x</code>?</p>
+  <p>Kết quả: <span class="blank" data-accept="3"></span></p>
+  <div class="q-explain">Xét 2, 4, 6 (đều ≤ 7) ⇒ 3 lần. Đến 8 &gt; 7 thì điều kiện <code>a[i] &lt;= x</code> sai, vòng lặp dừng, không so sánh <code>==</code> nữa. Bản thường sẽ tốn 6 lần.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Nhị phân trên a = <code>1 3 5 7 9 11 13</code>, tìm x = 4 (không có). Bao nhiêu lần <code>a[mid]==x</code>?</p>
+  <p>Kết quả: <span class="blank" data-accept="3"></span></p>
+  <div class="q-explain">mid = 3 (7) ⇒ right = 2; mid = 1 (3) ⇒ left = 2; mid = 2 (5) ⇒ right = 1; left &gt; right dừng. 3 lần = ⌊log₂7⌋ + 1.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Độ phức tạp trường hợp xấu nhất của tìm kiếm nhị phân là:</p>
+  <ol class="q-options">
+    <li><button>O(1)</button></li>
+    <li><button>O(n)</button></li>
+    <li><button data-correct>O(log n)</button></li>
+    <li><button>O(n²)</button></li>
+  </ol>
+  <div class="q-explain">Mỗi lần so sánh loại một nửa ⇒ sau khoảng log₂n lần còn 1 phần tử.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Điều kiện bắt buộc để dùng tìm kiếm nhị phân trên mảng:</p>
+  <ol class="q-options">
+    <li><button data-correct>mảng đã được sắp thứ tự</button></li>
+    <li><button>mảng không có phần tử trùng</button></li>
+    <li><button>mảng có số phần tử lẻ</button></li>
+    <li><button>mảng có giá trị không âm</button></li>
+  </ol>
+  <div class="q-explain">Chỉ cần mảng có thứ tự. Phần tử trùng hay n chẵn/lẻ không ảnh hưởng tính đúng.</div>
+</div>
+
+<div class="source">
+<p><a href="https://en.wikipedia.org/wiki/Binary_search">Wikipedia — Binary search</a> (đọc mục <em>Algorithm</em> và <em>Performance</em>, ~10 phút). Đối chiếu thêm chương Tìm kiếm trong <em>Giáo trình CTDL&amp;GT</em> — Trần Hạnh Nhi, Dương Anh Đức.</p>
+</div>
+
+<div class="ask"><p>Chỗ nào chưa rõ — ví dụ "giữa mảng" nên ghi n/2 hay (n+1)/2, hay đếm cả phép <code>i &lt; n</code> thì sao — cứ hỏi agent ngay trong cuộc trò chuyện.</p></div>
+
+<nav class="pager">
+  <a href="../index.html">← Lộ trình ôn</a>
+  <a href="0002-selection-insertion-sort.html">Bài 02 · Selection &amp; Insertion Sort →</a>
+</nav>
+</main>
+</body>
+</html>

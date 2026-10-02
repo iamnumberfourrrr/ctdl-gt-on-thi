@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thuật ngữ — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="crumbs">
+<a href="../index.html">Lộ trình ôn</a>
+<a href="do-phuc-tap-va-dem.html">Độ phức tạp &amp; đếm</a>
+<a href="code-mau-cpp.html">Code mẫu C++</a>
+<a href="b-tree-va-bang-bam.html">B-Tree &amp; bảng băm</a>
+</nav>
+<p class="kicker">Tra nhanh · in ra 1–2 trang A4</p>
+<h1>Thuật ngữ dùng trong khóa ôn</h1>
+<p class="subtitle">Mỗi thuật ngữ: định nghĩa 1–2 câu nói nó <em>là gì</em>; tên cần tránh ghi ngay dưới bằng chữ nghiêng.</p>
+
+<div class="cols">
+
+<section class="card">
+<h3>Chung</h3>
+<dl class="gloss">
+<dt>Độ phức tạp (complexity)</dt>
+<dd>Hàm mô tả lượng phép toán tăng theo n như thế nào khi n lớn; viết O(...) cho trường hợp xấu nhất trừ khi ghi rõ khác.</dd>
+<dt>O(c) = O(1)</dt>
+<dd>Số phép toán không đổi theo n. Giáo viên ghi "O(c)" — viết O(1) hay O(c) đều được, chúng là một.</dd>
+<dt>Phép so sánh</dt>
+<dd>Một lần thực hiện <code>&lt;</code>, <code>&lt;=</code>, <code>==</code>, <code>&gt;</code>… Khi đề hỏi "đếm phép so sánh", phải đọc kỹ đề đếm phép <em>nào</em> (thường chỉ <code>==</code> hoặc chỉ <code>&lt;</code> trong vòng trong).</dd>
+<dt>Phép gán</dt>
+<dd>Một lần gán giá trị (kể cả dời chỗ phần tử <code>a[j+1]=a[j]</code>). Đề có thể đếm riêng phép gán / dời chỗ thay vì so sánh.</dd>
+<dt>Trường hợp tốt nhất / xấu nhất</dt>
+<dd>Lượng phép toán ít nhất / nhiều nhất trên các input cùng cỡ n (ví dụ Insertion: mảng đã tăng → tốt nhất; giảm dần → xấu nhất).</dd>
+</dl>
+</section>
+
+<section class="card">
+<h3>Tìm kiếm &amp; Sắp xếp</h3>
+<dl class="gloss">
+<dt>Tìm kiếm tuyến tính (linear search)</dt>
+<dd>Duyệt từ đầu mảng, so sánh từng phần tử với x cho tới khi tìm thấy hoặc hết mảng.</dd>
+<dt>Dừng sớm (early stop)</dt>
+<dd>Trên mảng tăng dần, dừng khi gặp <code>a[i] &gt; x</code> vì phía sau chắc chắn không còn x — đây là "tận dụng điều kiện tăng dần" đề yêu cầu.</dd>
+<dt>Tìm kiếm nhị phân (binary search)</dt>
+<dd>Trên mảng <em>đã sắp xếp</em>: so sánh x với phần tử ở giữa rồi loại nửa trái hoặc nửa phải, lặp lại.</dd>
+<dt>Selection Sort</dt>
+<dd>Mỗi vòng chọn phần tử nhỏ nhất phần chưa sắp xếp rồi <em>hoán đổi</em> về đúng chỗ đầu đoạn.</dd>
+<dt>Insertion Sort</dt>
+<dd>Chèn lần lượt từng phần tử vào đúng vị trí trong đoạn đầu đã sắp xếp, bằng cách dời các phần tử lớn hơn sang phải.</dd>
+<dt>Quick Sort</dt>
+<dd>Chọn pivot, phân hoạch (partition): phần nhỏ hơn pivot sang trái, lớn hơn sang phải; đệ quy hai bên.</dd>
+<dt>Heap Sort</dt>
+<dd>Build max-heap bằng Shift rồi lặp: đổi gốc (lớn nhất) với phần cuối, giảm kích thước heap, Shift lại gốc.</dd>
+<dt>Heap</dt>
+<dd>Cây nhị phân hoàn chỉnh lưu trong mảng, mỗi node ≥ con của nó (max-heap).</dd>
+<dt>Phân hoạch (partition)</dt>
+<dd>Bước sắp xếp lại đoạn sao cho pivot đứng giữa: trái ≤ pivot ≤ phải.</dd>
+<dt>Pivot</dt>
+<dd>Phần tử làm mốc phân hoạch trong Quick Sort; bản chuẩn của giáo trình chọn phần tử <em>giữa</em> đoạn.</dd>
+</dl>
+</section>
+
+<section class="card">
+<h3>DSLK</h3>
+<dl class="gloss">
+<dt>DSLK — danh sách liên kết đơn (singly linked list)</dt>
+<dd>Chuỗi node, mỗi node giữ dữ liệu và con trỏ tới node kế. Trong khóa này: <code>LIST{pHead, pTail}</code>, <code>NODE{info, pNext}</code>.
+<div class="avoid">Tránh gọi "linked list" trơn khi trình bày — ghi đầy đủ "danh sách liên kết đơn (DSLK)".</div></dd>
+<dt>Node</dt>
+<dd>Một phần tử của DSLK/cây: vùng dữ liệu (info/key) + con trỏ liên kết. Giáo trình dùng "node", không dùng "nút".</dd>
+<dt>pHead / pTail</dt>
+<dd>Con trỏ tới node đầu / node cuối của LIST; rỗng thì cả hai đều <code>NULL</code>.</dd>
+<dt>Duyệt (traverse)</dt>
+<dd>Đi qua từng node một lần từ pHead theo pNext để xử lý theo yêu cầu (đếm, tính tổng, in…).</dd>
+<dt>Thêm node</dt>
+<dd>Chèn node vào vị trí đầu (sau pHead), cuối (AddTail), hoặc sau một node Q cho trước.</dd>
+<dt>Xóa node</dt>
+<dd>Gỡ node khỏi list và giải phóng: giữ con trỏ node trước, nối tắt qua node bị xóa, cập nhật pHead/pTail nếu cần.</dd>
+</dl>
+</section>
+
+<section class="card">
+<h3>Cây &amp; BST</h3>
+<dl class="gloss">
+<dt>BST — cây nhị phân tìm kiếm</dt>
+<dd>Cây nhị phân mà mọi khóa cây con trái &lt; khóa node &lt; mọi khóa cây con phải (áp dụng cho mọi node).
+<div class="avoid">Tránh "cây tìm kiếm nhị phân" — dùng "cây nhị phân tìm kiếm (BST)".</div></dd>
+<dt>Khóa (key)</dt>
+<dd>Giá trị dùng để so sánh, sắp xếp và tìm kiếm trong BST / bảng băm.</dd>
+<dt>Duyệt NLR (tiền tự)</dt>
+<dd>Xử lý Node → Left → Right. Tương tự LNR (trung tự: L-N-R), LRN (hậu tự: L-R-N), NRL (N-R-L), RNL (R-N-L), RLN (R-L-N).</dd>
+<dt>Phần tử thế mạng</dt>
+<dd>Node thay thế khi xóa node có 2 con trong BST. Theo đề: <em>nhỏ nhất cây con phải</em>; cách đối xứng: lớn nhất cây con trái.
+<div class="avoid">Tránh "successor/predecessor" khi viết bài — ghi "phần tử thế mạng" rồi nói rõ lấy node nào.</div></dd>
+<dt>In theo mức</dt>
+<dd>Duyệt cây theo từng tầng từ gốc xuống, trái sang phải — dùng hàng đợi (queue).</dd>
+</dl>
+</section>
+
+<section class="card">
+<h3>B-Tree</h3>
+<dl class="gloss">
+<dt>B-Tree bậc m</dt>
+<dd>Cây tìm kiếm cân bằng: mỗi node tối đa <strong>m−1 khóa</strong> và <strong>m con</strong>; node khác gốc tối thiểu ⌈m/2⌉−1 khóa; gốc tối thiểu 1 khóa; node trong có n khóa ⇒ n+1 con; mọi lá cùng mức.</dd>
+<dt>Tràn / tách (split)</dt>
+<dd>Khi chèn làm node vượt m−1 khóa: node đẩy <em>khóa giữa</em> lên cha và tách làm hai.
+<div class="avoid">"Split" là tên tiếng Anh ổn; tránh dịch "chia node" khi nói tràn — ghi "tách (split)".</div></dd>
+<dt>Underflow (thiếu khóa)</dt>
+<dd>Sau khi xóa, node ít hơn ⌈m/2⌉−1 khóa. Cách xử lý: mượn khóa qua cha, nếu không được thì Catenation.</dd>
+<dt>Mượn khóa qua cha (Redistribution)</dt>
+<dd>Xử lý Underflow bằng cách mượn một khóa từ node anh em dư khóa, đi qua khóa phân cách ở cha (giữ tính chất BST).</dd>
+<dt>Catenation</dt>
+<dd>Gộp node thiếu với một node anh em <em>cùng với khóa phân cách của cha</em> thành một node; cha mất một khóa — có thể gây Underflow lan lên trên; gốc rỗng thì cây thấp đi một mức.
+<div class="avoid">Tránh "merge / hợp nhất" — khóa thuật của khóa là <strong>Catenation</strong>. Ưu tiên gộp với node liền trước.</div></dd>
+<dt>Khóa phân cách</dt>
+<dd>Khóa ở cha nằm giữa hai node anh em; khi mượn hoặc Catenation thì khóa này đổi chỗ / đi xuống.</dd>
+</dl>
+</section>
+
+<section class="card">
+<h3>Bảng băm</h3>
+<dl class="gloss">
+<dt>Hàm băm (hash function)</dt>
+<dd>Hàm ánh xạ khóa k vào một chỉ số ô trong bảng có M ô.</dd>
+<dt>Đụng độ (collision)</dt>
+<dd>Hai khóa khác nhau băm vào cùng một chỉ số.
+<div class="avoid">Tránh "va chạm" — dùng "đụng độ (collision)".</div></dd>
+<dt>Băm nối kết (separate chaining)</dt>
+<dd>Mỗi ô là một danh sách liên kết: khóa đụng độ nối thêm vào cuối danh sách của ô đó.</dd>
+<dt>Dò tuyến tính (linear probing)</dt>
+<dd>Xử lý đụng độ bằng cách dò ô kế tiếp: h(k,i) = (h(k)+i) mod M, i = 0,1,2,…</dd>
+<dt>Dò bậc 2 (quadratic probing)</dt>
+<dd>Dò với bước bình phương: h(k,i) = (h(k)+i²) mod M.</dd>
+<dt>Băm kép (double hashing)</dt>
+<dd>Dùng hàm băm thứ hai làm bước nhảy: h(k,i) = (h1(k) + i·h2(k)) mod M.</dd>
+<dt>Hệ số tải (load factor)</dt>
+<dd>α = n/M với n là số khóa đã chèn, M là số ô. Đề dùng ngưỡng α để quyết định <em>có chèn tiếp hay không</em>.</dd>
+<dt>Trạng thái ô</dt>
+<dd>Mỗi ô một trong ba trạng thái: <strong>Empty</strong> (chưa từng dùng), <strong>Occupied</strong> (đang giữ khóa), <strong>Deleted / DEL</strong> (đã xóa, còn "vết"): dò tiếp qua DEL nhưng chèn được vào ô DEL.</dd>
+<dt>Băm lại (rehash)</dt>
+<dd>Chuỗi các vị trí thử i = 0, 1, 2, … khi xảy ra đụng độ — "cột băm lại" trong bảng chạy tay của đề chính là các lần thử này.</dd>
+</dl>
+</section>
+
+</div>
+
+<div class="source">
+<p>Số liệu &amp; thuật ngữ khớp giáo trình <em>Cấu trúc dữ liệu và giải thuật</em> — Trần Hạnh Nhi, Dương Anh Đức (chương DSLK, cây, bảng băm) và đề mẫu 2025–2026. Xem thêm <a href="do-phuc-tap-va-dem.html">Độ phức tạp &amp; đếm phép toán</a>, <a href="code-mau-cpp.html">Code mẫu C++</a>, <a href="b-tree-va-bang-bam.html">B-Tree &amp; bảng băm</a>.</p>
+</div>
+</main>
+</body>
+</html>

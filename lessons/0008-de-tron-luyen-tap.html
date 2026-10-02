@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 · Đề trộn — luyện tập tổng hợp — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js" defer></script>
+<script src="../assets/tree.js" defer></script>
+</head>
+<body>
+<main>
+<nav class="crumbs">
+  <a href="../index.html">← Lộ trình ôn</a>
+  <a href="../reference/glossary.html">Thuật ngữ</a>
+  <a href="../reference/do-phuc-tap-va-dem.html">Bảng độ phức tạp</a>
+  <a href="../reference/code-mau-cpp.html">Code mẫu C++</a>
+  <a href="../reference/b-tree-va-bang-bam.html">B-Tree &amp; bảng băm</a>
+</nav>
+
+<p class="kicker">Bài 08 · ~25 phút · Đề mô phỏng 10 câu (10.0đ)</p>
+<h1>Đề trộn — luyện tập tổng hợp</h1>
+<p class="subtitle">Đủ 10 câu đúng cấu trúc đề mẫu, nhưng dữ liệu mới và chủ đề bị trộn thứ tự — kiểm tra xem kiến thức có "bám" được chưa.</p>
+
+<div class="goal"><strong>Thắng lợi của bài:</strong> làm trọn một đề 10 câu trên giấy trong ~25 phút (bản thu nhỏ của 90 phút thật), tự chấm từng câu, và biết chính xác câu nào phải quay lại bài nào.</div>
+
+<div class="callout exam">
+<p>Đề mẫu ghi: <em>"Sinh viên không được sử dụng tài liệu, Làm bài trên đề"</em> — 90 phút, 2 phần: Câu trả lời ngắn (câu 1–8) + Câu hỏi tự luận (câu 9–10), tổng 10 câu. Đề mô phỏng bên dưới giữ nguyên cấu trúc và thang điểm đó, chỉ đổi dữ liệu và trộn thứ tự chủ đề.</p>
+</div>
+
+<h2>Cách làm đề này</h2>
+<ol class="steps">
+  <li>Bấm giờ ~25 phút, làm toàn bộ 10 câu ra giấy — không lướt bài trước, không mở code mẫu.</li>
+  <li>Làm xong mới bấm <em>Hiện đáp án / Hiện lời giải</em> của từng câu để tự chấm; câu vẽ thì so với hình trong lời giải.</li>
+  <li>Câu sai → bấm link <em>Ôn lại</em> cuối câu, quay về đúng bài dạy kỹ năng đó; hôm sau làm lại đề này cho trôi.</li>
+</ol>
+
+<table>
+<tr><th>Câu</th><th>Chủ đề</th><th>Điểm</th><th>Ôn lại</th></tr>
+<tr><td>1</td><td>BST: thêm lần lượt, duyệt NRL, xóa</td><td>1.5</td><td>Bài 05</td></tr>
+<tr><td>2</td><td>B-Tree bậc 3: tạo cây bằng chèn</td><td>1.0</td><td>Bài 06</td></tr>
+<tr><td>3</td><td>Tìm kiếm nhị phân + đếm phép so sánh</td><td>1.0</td><td>Bài 01</td></tr>
+<tr><td>4</td><td>Băm kép (double hashing) + hệ số tải</td><td>1.0</td><td>Bài 07</td></tr>
+<tr><td>5</td><td>Insertion sort đếm phép + QuickSort chạy tay</td><td>1.0</td><td>Bài 02, 03</td></tr>
+<tr><td>6</td><td>DSLK: chuyển node đầu về cuối (điền code)</td><td>1.0</td><td>Bài 04</td></tr>
+<tr><td>7</td><td>B-Tree bậc 5: xóa (mượn khóa / Catenation)</td><td>1.0</td><td>Bài 06</td></tr>
+<tr><td>8</td><td>Dò bậc 2 + dò tuyến tính với DEL</td><td>1.0</td><td>Bài 07</td></tr>
+<tr><td>9</td><td>Tự luận DSLK: xóa mọi node âm</td><td>1.0</td><td>Bài 04</td></tr>
+<tr><td>10</td><td>Tự luận BST: đếm node có đúng 1 con</td><td>0.5</td><td>Bài 05</td></tr>
+</table>
+
+<div class="callout trap">
+<p>Dữ liệu mới nhưng bẫy cũ: (1) băm kép — khóa cuối có thể <strong>bị từ chối vì hệ số tải</strong>, đừng cứ thế mà chèn; (2) xóa B-Tree bậc 5 — kiểm tra node liền <em>trước</em> có dư khóa chưa (mượn) rồi mới tính chuyện Catenation; (3) chèn vào bảng có DEL — phải dò tới ô <em>Empty</em> đầu tiên mới chắc khóa chưa tồn tại, nhưng đặt vào ô <em>DEL đầu tiên</em> đã gặp. Và bẫy lớn nhất của đề trộn: câu quen mà số mới — <strong>không mang đáp án đề mẫu vào đây</strong>.</p>
+</div>
+
+<h2>Phần 1 — Câu trả lời ngắn (câu 1–8)</h2>
+
+<div class="q">
+  <p class="q-prompt"><strong>Câu 1 (1.5đ)</strong> — Cho dãy 12 giá trị thêm lần lượt vào cây BST T1 ban đầu rỗng: <code>35 20 60 10 30 50 80 5 25 45 55 70</code>.</p>
+  <p>a. (0.5đ) Vẽ cây T1 sau khi thêm hết dãy.</p>
+  <p>b. (0.5đ) Cho kết quả duyệt T1 theo thứ tự <strong>NRL</strong> (Node–Right–Left): <span class="blank" data-accept='["35 60 80 70 50 55 45 20 30 25 10 5"]' data-width="34"></span></p>
+  <p>c. (0.5đ) Vẽ lại T1 sau khi xóa lần lượt <strong>60</strong> rồi <strong>5</strong> (node 2 con thay bằng <em>nhỏ nhất cây con phải</em>). Kết quả duyệt NLR: <span class="blank" data-accept='["35 20 10 30 25 70 50 45 55 80"]' data-width="30"></span></p>
+  <div class="q-explain">
+    <p><strong>b.</strong> NRL: <code>35 60 80 70 50 55 45 20 30 25 10 5</code> — Node trước, rồi hết nhánh phải, rồi nhánh trái.</p>
+    <p><strong>a.</strong> Cây T1:</p>
+    <figure class="tree" data-kind="bst" data-insert="35,20,60,10,30,50,80,5,25,45,55,70"></figure>
+    <p><strong>c.</strong> Xóa 60 (2 con): thế mạng = 70 (nhỏ nhất cây con phải của 60); xóa 5 (lá): bỏ đi. Cây sau khi xóa và NLR = <code>35 20 10 30 25 70 50 45 55 80</code>:</p>
+    <figure class="tree" data-kind="bst" data-insert="35,20,60,10,30,50,80,5,25,45,55,70" data-delete="60,5" data-replace="succ"></figure>
+  </div>
+  <p><em>Ôn lại: <a href="0005-cay-nhi-phan-tim-kiem.html">Bài 05 · BST</a></em></p>
+</div>
+
+<div class="q">
+  <p class="q-prompt"><strong>Câu 2 (1.0đ)</strong> — Vẽ B-Tree bậc 3 (mỗi node tối đa 2 khóa) sau khi lần lượt thêm vào cây rỗng: <code>30 10 25 40 15 35 45 5 20 50</code>.</p>
+  <p>Khóa của node gốc sau khi chèn hết dãy: <span class="blank" data-accept='["25"]' data-width="4"></span></p>
+  <div class="q-explain">
+    <p>Gốc chỉ còn 1 khóa: <strong>25</strong>. Node đầy 3 khóa thì tách (split), khóa giữa đẩy lên cha. Cây cuối:</p>
+    <figure class="tree" data-kind="btree" data-order="3" data-insert="30,10,25,40,15,35,45,5,20,50"></figure>
+    <p>Gốc [25]; mức 1: [10] và [35 45]; lá: [5], [15 20] | [30], [40], [50]. Mọi lá cùng mức.</p>
+  </div>
+  <p><em>Ôn lại: <a href="0006-b-tree.html">Bài 06 · B-Tree</a></em></p>
+</div>
+
+<div class="q">
+  <p class="q-prompt"><strong>Câu 3 (1.0đ)</strong> — Cho mảng tăng dần <em>a</em> = <code>2 4 7 10 13 16 19 22 25 28 31 34</code> (n = 12), tìm bằng <strong>tìm kiếm nhị phân</strong>.</p>
+  <p>a. (0.5đ) Viết hàm <code>BinarySearch(a, n, x)</code>.</p>
+  <p>b. (0.5đ) Số lần so sánh <code>a[mid]==x</code>: x = 25 → <span class="blank" data-accept='["2"]' data-width="3"></span> · x = 5 (không có) → <span class="blank" data-accept='["4"]' data-width="3"></span> · x = 16 → <span class="blank" data-accept='["1"]' data-width="3"></span></p>
+  <div class="q-explain">
+    <p><strong>b.</strong> x = 25: mid=5 (16&lt;25) → mid=8 (25) ⇒ <strong>2</strong> lần. x = 5: mid=5 (16) → mid=2 (7) → mid=0 (2) → mid=1 (4), left&gt;right dừng ⇒ <strong>4</strong> lần = ⌊log₂12⌋+1. x = 16 nằm đúng mid đầu tiên ⇒ <strong>1</strong> lần (tốt nhất).</p>
+    <pre><code>int BinarySearch(int a[], int n, int x) {
+    int l = 0, r = n - 1;
+    while (l &lt;= r) {
+        int mid = (l + r) / 2;
+        if (a[mid] == x) return mid;
+        if (a[mid] &lt; x) l = mid + 1;
+        else r = mid - 1;
+    }
+    return -1;
+}</code></pre>
+    <p>Xấu nhất ⌊log₂n⌋ + 1 lần so sánh.<span class="sidenote"><a href="https://en.wikipedia.org/wiki/Binary_search#Performance">Wikipedia — Binary search, Performance</a>.</span></p>
+  </div>
+  <p><em>Ôn lại: <a href="0001-tim-kiem-dem-so-sanh.html">Bài 01 · Tìm kiếm</a></em></p>
+</div>
+
+<div class="q">
+  <p class="q-prompt"><strong>Câu 4 (1.0đ)</strong> — Bảng băm TableSize M = 11, load factor 0.6, băm kép: h₁(k) = k mod 7, h₂(k) = 7 − (k mod 7), h(k, i) = (h₁(k) + i·h₂(k)) mod 11. Chèn lần lượt: <code>4 11 18 25 8 15 22</code>.</p>
+  <p>a. (0.5đ) Trình bày từng bước dò của từng khóa.</p>
+  <p>b. (0.5đ) Khóa 22 có được chèn không: <span class="blank" data-accept='["không","khong","Không"]' data-width="6"></span> — số khóa chèn được vào bảng: <span class="blank" data-accept='["6"]' data-width="3"></span></p>
+  <div class="q-explain">
+    <p><strong>a.</strong> Bảng từng bước (giá trị dò theo i = 0, 1, 2, …):</p>
+    <table class="grid">
+      <tr><th>key</th><th>h₁</th><th>h₂</th><th>i=0</th><th>i=1</th><th>i=2</th><th>i=3</th><th>i=4</th></tr>
+      <tr><td>4</td><td>4</td><td>3</td><td class="new">4</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>11</td><td>4</td><td>3</td><td>4</td><td class="new">7</td><td></td><td></td><td></td></tr>
+      <tr><td>18</td><td>4</td><td>3</td><td>4</td><td>7</td><td class="new">10</td><td></td><td></td></tr>
+      <tr><td>25</td><td>4</td><td>3</td><td>4</td><td>7</td><td>10</td><td class="new">2</td><td></td></tr>
+      <tr><td>8</td><td>1</td><td>6</td><td class="new">1</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>15</td><td>1</td><td>6</td><td>1</td><td>7</td><td>2</td><td class="new">8</td><td></td></tr>
+      <tr><td>22</td><td>1</td><td>6</td><td>1</td><td>7</td><td>2</td><td>8</td><td>3</td></tr>
+    </table>
+    <p><strong>b.</strong> Đang có 6 khóa; chèn 22 làm α = 7/11 ≈ 0.64 &gt; 0.6 ⇒ <strong>không chèn</strong> (dù dò tới i=4 là ra ô 3). Bảng sau khi chèn được 6 khóa:</p>
+    <table class="grid">
+      <tr><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr>
+      <tr><td></td><td>8</td><td>25</td><td></td><td>4</td><td></td><td></td><td>11</td><td>15</td><td></td><td>18</td></tr>
+    </table>
+    <p>Quy ước "chỉ chèn khi α sau khi chèn ≤ giới hạn" là cách hiểu của khoá học này <em>[suy luận — hỏi lại giảng viên]</em>.</p>
+  </div>
+  <p><em>Ôn lại: <a href="0007-bang-bam.html">Bài 07 · Bảng băm</a></em></p>
+</div>
+
+<div class="q">
+  <p class="q-prompt"><strong>Câu 5 (1.0đ)</strong> — a. (0.5đ) Cho mảng <code>5 9 12 14 20 4 6 15</code>, sắp tăng dần bằng <strong>Insertion sort</strong> (kiểu dịch phần tử): tổng số lần thực hiện lệnh gán <code>a[pos+1] = a[pos]</code> là <span class="blank" data-accept='["10"]' data-width="3"></span>, mảng sau khi sắp: <span class="blank" data-accept='["4 5 6 9 12 14 15 20"]' data-width="24"></span></p>
+  <p>b. (0.5đ) Cho mảng <code>30 10 50 20 40 60 15</code> và QuickSort kiểu giáo trình (pivot = phần tử ở giữa). Mảng sau <strong>lần phân hoạch đầu tiên</strong>: <span class="blank" data-accept='["15 10 20 50 40 60 30"]' data-width="22"></span></p>
+  <div class="q-explain">
+    <p><strong>a.</strong> Chèn 4: dịch 5 phần tử (20, 14, 12, 9, 5); chèn 6: dịch 4 (20, 14, 12, 9); chèn 15: dịch 1 (20). Tổng 5+4+1 = <strong>10</strong>; mảng <code>4 5 6 9 12 14 15 20</code>.</p>
+    <p><strong>b.</strong> x = a[(0+6)/2] = 20. Vòng 1: i=0 (30≥20 dừng), j=6 (15≤20 dừng) → swap(30,15); vòng 2: i chạy tới 2 (50), j chạy về 3 (20) → swap(50,20); i=3 &gt; j=2 nên dừng. Kết quả <code>15 10 20 50 40 60 30</code> — pivot 20 về đúng vị trí cuối (chỉ số 2), đệ quy tiếp hai đoạn [0..2] và [3..6].</p>
+  </div>
+  <p><em>Ôn lại: <a href="0002-selection-insertion-sort.html">Bài 02 · Selection &amp; Insertion</a> · <a href="0003-quick-heap-sort.html">Bài 03 · Quick &amp; Heap</a></em></p>
+</div>
+
+<div class="q">
+  <p class="q-prompt"><strong>Câu 6 (1.0đ)</strong> — DSLK đơn có <code>NODE{info, pNext}</code>, <code>LIST{pHead, pTail}</code>. Điền mỗi chỗ trống đúng một lệnh để chuyển <strong>node đầu về cuối</strong> danh sách (không tạo node mới, không đổi info):</p>
+  <pre><code>void MoveHeadToTail(LIST &amp;L) {
+    if (L.pHead == NULL || L.pHead == L.pTail) return;
+    NODE *p = L.pHead;
+    <span class="blank" data-accept='["L.pHead = p-&gt;pNext;","L.pHead=p-&gt;pNext;"]' data-width="20"></span>
+    <span class="blank" data-accept='["p-&gt;pNext = NULL;","p-&gt;pNext=NULL;"]' data-width="16"></span>
+    <span class="blank" data-accept='["L.pTail-&gt;pNext = p;","L.pTail-&gt;pNext=p;"]' data-width="20"></span>
+    <span class="blank" data-accept='["L.pTail = p;","L.pTail=p;"]' data-width="14"></span>
+}</code></pre>
+  <div class="q-explain">
+    <p>Thứ tự bắt buộc: gỡ p khỏi đầu trước (<code>L.pHead = p-&gt;pNext</code>), cắt liên kết cũ (<code>p-&gt;pNext = NULL</code> — quên dòng này là node cuối trỏ vòng về chính nó), rồi nối vào đuôi và cập nhật <code>pTail</code>. Biên dịch chạy thử với 3→7→12→8: sau 1 lần gọi được 7 12 8 3 (tail = 3); gọi 4 lần quay về 3 7 12 8 — danh sách "xoay vòng" đúng; danh sách 1 node không đổi.</p>
+  </div>
+  <p><em>Ôn lại: <a href="0004-danh-sach-lien-ket.html">Bài 04 · DSLK</a></em></p>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt"><strong>Câu 7 (1.0đ)</strong> — Cho B-Tree bậc 5 ở Hình 1 (node khác gốc tối thiểu 2 khóa). Hai câu độc lập, đều xóa trên Hình 1:</p>
+  <figure class="tree" data-kind="btree" data-order="5" data-tree='{"k":[50],"c":[{"k":[20,35],"c":[{"k":[5,8,10,12],"c":[]},{"k":[22,25],"c":[]},{"k":[38,40],"c":[]}]},{"k":[68,85],"c":[{"k":[55,58],"c":[]},{"k":[70,72],"c":[]},{"k":[90,95],"c":[]}]}]}'></figure>
+  <p>a. (0.5đ) Vẽ lại cây sau khi xóa khóa <strong>25</strong>.</p>
+  <p>b. (0.5đ) Vẽ lại cây sau khi xóa khóa <strong>70</strong>.</p>
+  <div class="q-explain">
+    <p><strong>a. Xóa 25 — Underflow rồi MƯỢN khóa.</strong> Lá [22 25] còn [22] ⇒ thiếu khóa (Underflow). Node liền trước [5 8 10 12] có 4 &gt; 2 khóa ⇒ mượn qua cha: khóa phân cách <strong>20 xuống</strong> node thiếu, <strong>12 lên</strong> thay chỗ 20.<span class="sidenote">Thuật ngữ underflow / redistribution / concatenation theo <a href="https://users.cs.utah.edu/~pandey/courses/cs6530/fall23/papers/trees/p121-comer.pdf">Comer, <em>The Ubiquitous B-Tree</em> (1979)</a>.</span></p>
+    <figure class="tree" data-kind="btree" data-order="5" data-tree='{"k":[50],"c":[{"k":[20,35],"c":[{"k":[5,8,10,12],"c":[]},{"k":[22,25],"c":[]},{"k":[38,40],"c":[]}]},{"k":[68,85],"c":[{"k":[55,58],"c":[]},{"k":[70,72],"c":[]},{"k":[90,95],"c":[]}]}]}' data-delete="25"></figure>
+    <p>Kết quả: cha thành [12 35], lá thành [5 8 10] và [20 22]. Cây vẫn 3 mức.</p>
+    <p><strong>b. Xóa 70 — Catenation dây chuyền.</strong> Lá [70 72] còn [72] ⇒ Underflow. Node liền trước [55 58] chỉ có 2 khóa (không dư) ⇒ không mượn được ⇒ <strong>Catenation</strong> (gộp) với node liền trước: [55 58] + khóa phân cách 68 + [72] → [55 58 68 72]. Cha [85] còn 1 khóa ⇒ lại Underflow; anh liền trước [20 35] cũng chỉ 2 khóa ⇒ Catenation: [20 35] + 50 + [85] → [20 35 50 85]. Gốc rỗng ⇒ node gộp thành gốc mới, cây thấp 1 mức:</p>
+    <figure class="tree" data-kind="btree" data-order="5" data-tree='{"k":[50],"c":[{"k":[20,35],"c":[{"k":[5,8,10,12],"c":[]},{"k":[22,25],"c":[]},{"k":[38,40],"c":[]}]},{"k":[68,85],"c":[{"k":[55,58],"c":[]},{"k":[70,72],"c":[]},{"k":[90,95],"c":[]}]}]}' data-delete="70"></figure>
+    <p>Gốc mới [20 35 50 85]; các lá [5 8 10 12], [22 25], [38 40], [55 58 68 72], [90 95]. Quy ước "mượn/catenate ưu tiên node liền trước" là giả định của khóa học này (giống đề mẫu) — đánh dấu vậy trên bài thi nếu đề không ghi rõ.</p>
+  </div>
+  <p><em>Ôn lại: <a href="0006-b-tree.html">Bài 06 · B-Tree</a></em></p>
+</div>
+
+<div class="q">
+  <p class="q-prompt"><strong>Câu 8 (1.0đ)</strong> — a. (0.5đ) Bảng băm M = 7 (đang rỗng), h(k) = k mod 7, <strong>dò bậc 2</strong> h(k, i) = (h(k) + i²) mod 7. Chèn lần lượt <code>5 12 19 7 14</code>: khóa 19 rơi vào ô số <span class="blank" data-accept='["2"]' data-width="3"></span>, khóa 14 rơi vào ô số <span class="blank" data-accept='["1"]' data-width="3"></span>. Nếu chèn tiếp 26 (h = 5) thì có chèn được không: <span class="blank" data-accept='["không","khong","Không"]' data-width="6"></span></p>
+  <p>b. (0.5đ) Bảng băm TableSize 10, h(k) = k mod 10, <strong>dò tuyến tính</strong>. Bảng hiện tại:</p>
+  <table class="grid">
+    <tr><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+    <tr><td></td><td>31</td><td>12</td><td class="del">DEL</td><td>71</td><td></td><td>56</td><td class="del">DEL</td><td class="del">DEL</td><td>49</td></tr>
+  </table>
+  <p>Chèn 21 vào ô số <span class="blank" data-accept='["3"]' data-width="3"></span>, chèn 45 vào ô số <span class="blank" data-accept='["5"]' data-width="3"></span></p>
+  <div class="q-explain">
+    <p><strong>a.</strong> Dãy dò của 19 (h=5): 5 → 6 → (5+4) mod 7 = <strong>2</strong>. Của 14 (h=0): 0 → 1. Bảng: 0:7, 1:14, 2:19, 5:5, 6:12. Với 26 (h=5): dò 5, 6, 2, 0, 0, 2, 6 — hết i = 0..6 mà chỉ chạm 4 ô ({0, 2, 5, 6}), ô 3 và 4 trống nhưng không bao giờ được dò tới ⇒ <strong>không chèn được dù bảng chưa đầy</strong> — hạn chế kinh điển của dò bậc 2 (i² mod 7 ∈ {0, 1, 2, 4} nên mỗi khóa chỉ với tới được (M+1)/2 ô).</p>
+    <p><strong>b.</strong> 21: dò 1 (31≠21) → 2 (12≠) → 3 (DEL, ghi nhớ ô này) → 4 (71≠) → 5 (Empty ⇒ chắc chắn 21 không có) ⇒ đặt vào ô DEL <em>đầu tiên</em> = <strong>3</strong>. 45: h=5 đang Empty ⇒ vào thẳng ô <strong>5</strong>. Bảng sau khi chèn:</p>
+    <table class="grid">
+      <tr><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+      <tr><td></td><td>31</td><td>12</td><td class="new">21</td><td>71</td><td class="new">45</td><td>56</td><td class="del">DEL</td><td class="del">DEL</td><td>49</td></tr>
+    </table>
+    <p>Ô DEL phải "bỏ qua nhưng dò tiếp" chứ không được coi là dừng — vì khóa cần tìm có thể nằm sau nó.<span class="sidenote"><a href="https://opendsa-server.cs.vt.edu/ODSA/Books/Everything/html/HashDel.html">OpenDSA — Hashing Deletion (tombstones)</a>.</span></p>
+  </div>
+  <p><em>Ôn lại: <a href="0007-bang-bam.html">Bài 07 · Bảng băm</a></em></p>
+</div>
+
+<h2>Phần 2 — Tự luận (câu 9–10)</h2>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt"><strong>Câu 9 (1.0đ)</strong> — Viết hàm <code>void RemoveAllNegative(LIST &amp;L)</code> xóa <em>mọi</em> node có <code>info &lt; 0</code> khỏi DSLK đơn, giữ nguyên thứ tự phần còn lại, cập nhật đúng <code>pHead</code>, <code>pTail</code>.</p>
+  <div class="q-explain">
+    <p>Xóa ở đầu bằng vòng lặp (vì có thể nhiều node âm liền nhau), rồi giữ node trước để nối cúi khi gặp node âm ở giữa/cuối:</p>
+    <pre><code>void RemoveHead(LIST &amp;L) {
+    if (L.pHead == NULL) return;
+    NODE *p = L.pHead;
+    L.pHead = p-&gt;pNext;
+    delete p;
+    if (L.pHead == NULL) L.pTail = NULL;   // danh sách rỗng sau khi xóa
+}
+
+void RemoveAllNegative(LIST &amp;L) {
+    while (L.pHead != NULL &amp;&amp; L.pHead-&gt;info &lt; 0)   // xóa ở đầu
+        RemoveHead(L);
+    if (L.pHead == NULL) return;                       // rỗng hết
+    NODE *prev = L.pHead;
+    while (prev-&gt;pNext != NULL) {
+        NODE *p = prev-&gt;pNext;
+        if (p-&gt;info &lt; 0) {
+            prev-&gt;pNext = p-&gt;pNext;
+            if (p == L.pTail) L.pTail = prev;          // xóa node cuối
+            delete p;
+        }
+        else prev = p;                                 // chỉ tiến khi không xóa
+    }
+}</code></pre>
+    <p>Biên dịch chạy thử: −3 5 −2 −7 8 −4 9 → <strong>5 8 9</strong> (tail = 9); danh sách toàn số âm (−1 −2 −3) → rỗng, pTail = NULL. Sinh viên chỉ viết được phần giữa mà quên vòng xóa đầu, hoặc quên cập nhật pTail, là mất nửa số điểm.</p>
+  </div>
+  <p><em>Ôn lại: <a href="0004-danh-sach-lien-ket.html">Bài 04 · DSLK</a></em></p>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt"><strong>Câu 10 (0.5đ)</strong> — Cho <code>TNODE{key, pLeft, pRight}</code>. Viết hàm đệ quy <code>int CountOneChild(TREE T)</code> đếm số node có <em>đúng một</em> con trong BST.</p>
+  <div class="q-explain">
+    <pre><code>int CountOneChild(TREE T) {
+    if (T == NULL) return 0;
+    int self = 0;
+    if ((T-&gt;pLeft == NULL) != (T-&gt;pRight == NULL)) self = 1;
+    return self + CountOneChild(T-&gt;pLeft) + CountOneChild(T-&gt;pRight);
+}</code></pre>
+    <p>Điều kiện "đúng một con" = <code>(pLeft == NULL) != (pRight == NULL)</code> — một bên rỗng, một bên không. Biên dịch chạy thử trên đúng cây T1 của câu 1: các node 10, 30, 80 mỗi node có một con ⇒ kết quả <strong>3</strong>.</p>
+  </div>
+  <p><em>Ôn lại: <a href="0005-cay-nhi-phan-tim-kiem.html">Bài 05 · BST</a></em></p>
+</div>
+
+<h2>Chấm xong — ôn lại chớp nhoáng</h2>
+
+<div class="q">
+  <p class="q-prompt">QuickSort (pivot giữa) độ phức tạp trường hợp <em>xấu nhất</em>: <span class="blank" data-accept='["O(n^2)","O(n²)","n^2","n²","O(n2)","o(n^2)"]' data-width="8"></span></p>
+  <div class="q-explain">Quick: tốt nhất/trung bình O(n log n), xấu nhất O(n²) — khi mọi lần phân hoạch đều lệch hẳn một bên (pivot luôn là min/max của đoạn). Pivot giữa trên mảng đã sắp lại chia đều, không phải trường hợp xấu.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Xóa khóa x khỏi bảng băm địa chỉ mở (dò tuyến tính): ô chứa x chuyển sang trạng thái <span class="blank" data-accept='["DEL","Deleted","del","DELETED"]' data-width="8"></span> (viết tắt theo đề), tuyệt không để trống.</p>
+  <div class="q-explain">Để trống (Empty) sẽ cắt ngang chuỗi dò của các khóa sau nó. DEL = "đã xóa nhưng vẫn dò qua được".</div>
+</div>
+
+<div class="source">
+<p><a href="../VB2_2025-2026%20-%20HK1%20-%20De%20-%20CTDL%26GT%20De1.pdf">Đề mẫu PDF — VB2 2025-2026 HK1, Đề 1</a> (trong thư mục khóa học). Đề trộn này mô phỏng đúng cấu trúc, thang điểm và quy ước chấm của đề gốc — trước ngày thi nên làm lại đề gốc một lần nữa cho chuẩn cảm giác đề thật.</p>
+</div>
+
+<div class="ask"><p>Sau khi tự chấm: câu nào sai, ghi ra đây cùng đáp án mình đã viết — agent sẽ chỉ đúng chỗ sai cách làm (không chỉ kết quả) và chốt xem có cần một đề trộn thứ hai với dữ liệu khác không.</p></div>
+
+<nav class="pager">
+  <a href="0007-bang-bam.html">← Bài 07 · Bảng băm</a>
+  <a href="../index.html">Xong lộ trình →</a>
+</nav>
+</main>
+</body>
+</html>

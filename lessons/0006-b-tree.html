@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · B-Tree — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js" defer></script>
+<script src="../assets/tree.js" defer></script>
+</head>
+<body>
+<main>
+<nav class="crumbs">
+  <a href="../index.html">← Lộ trình ôn</a>
+  <a href="../reference/glossary.html">Thuật ngữ</a>
+  <a href="../reference/b-tree-va-bang-bam.html">B-Tree &amp; bảng băm</a>
+</nav>
+
+<p class="kicker">Bài 06 · ~15 phút · Câu 5–6 đề mẫu (2.0đ)</p>
+<h1>B-Tree bậc m: chèn, xóa, mã giả</h1>
+<p class="subtitle">Vẽ đúng cây sau chuỗi chèn; xóa xử lý đúng Underflow bằng mượn qua cha (Redistribution) hoặc Catenation — đúng quy ước đề.</p>
+
+<div class="goal"><strong>Thắng lợi của bài:</strong> không cần nhìn lại, vẽ đúng B-Tree bậc 3 sau 15 lần chèn và B-Tree bậc 5 sau khi xóa (biết rõ khi nào tách node, khi nào mượn khóa, khi nào Catenation), và viết được mã giả tìm kiếm / duyệt.</div>
+
+<div class="callout exam">
+<p><strong>Câu 5</strong> (1.0đ): Vẽ cây <strong>B-Tree bậc 3</strong> sau khi thêm lần lượt 15 khóa {10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80} — cây ban đầu rỗng.</p>
+<p><strong>Câu 6</strong> (1.0đ): Cho B-Tree bậc 5 như Hình 1. Quy ước: khóa cần xóa x không nằm ở lá → thế mạng = khóa <strong>lớn nhất nhỏ hơn x</strong>; khi có 2 lựa chọn để Catenation → ưu tiên node <strong>liền trước</strong>. a) Vẽ lại cây sau khi xóa 20. b) Vẽ lại cây (từ Hình 1, không phải từ cây câu a) sau khi xóa 60.</p>
+</div>
+
+<h2>1. Điều kiện B-Tree bậc m</h2>
+<p>B-Tree cân bằng theo bậc: khóa chỉ nằm trong node, mọi node lá cùng mức. Bảng dưới là <em>điều kiện sống còn</em> khi chấm bài vẽ — thiếu một điều kiện là mất điểm:</p>
+<table class="grid">
+<thead><tr><th>Điều kiện</th><th>Bậc 3</th><th>Bậc 5</th></tr></thead>
+<tbody>
+<tr><td>Tối đa khóa / node (m − 1)</td><td>2</td><td>4</td></tr>
+<tr><td>Tối thiểu khóa, node khác gốc (⌈m/2⌉ − 1)</td><td>1</td><td>2</td></tr>
+<tr><td>Tối thiểu khóa ở gốc (cây không rỗng)</td><td>1</td><td>1</td></tr>
+<tr><td>Node trong có n khóa ⇒ n + 1 con</td><td>✓</td><td>✓</td></tr>
+<tr><td>Khóa trong node sắp tăng dần; mọi lá cùng mức</td><td>✓</td><td>✓</td></tr>
+</tbody>
+</table>
+<p>Câu 6 đề mẫu phát biểu đúng các dòng này cho bậc 5 — thuộc lòng để tự kiểm cây mình vẽ: đếm khóa từng node, đối chiếu min/max, xem mọi lá đã cùng mức chưa.</p>
+
+<div class="callout trap">
+<p><strong>Bẫy 1:</strong> bậc m là tối đa <em>m con</em>, tức tối đa <strong>m − 1 khóa</strong> — node "tràn" khi đủ <strong>m khóa</strong> (3 khóa với bậc 3, 5 khóa với bậc 5), không phải khi đủ m − 1. <strong>Bẫy 2:</strong> node khác gốc của bậc 5 thiếu khóa (Underflow) khi còn <strong>&lt; 2</strong> khóa — node 2 khóa vẫn là đủ, không được Catenation.</p>
+</div>
+
+<h2>2. Chèn: tràn → tách, khóa giữa lên cha</h2>
+<p>Ba bước, lặp từng khóa từ trái sang phải:</p>
+<ol>
+<li><strong>Tìm lá</strong> chứa khoảng của khóa mới (nhỏ hơn khóa trái nhất → con đầu; kẹp giữa hai khóa → con giữa; lớn hơn tất cả → con cuối).</li>
+<li><strong>Chèn có thứ tự</strong> vào lá đó.</li>
+<li>Lá đủ <strong>m khóa → tràn</strong>: tách đôi — bậc 3 giữ <code>1 | 1</code>, bậc 5 giữ <code>2 | 2</code> — <strong>khóa giữa đẩy lên cha</strong>. Cha nhận khóa cũng có thể tràn → tách tiếp. Tách tới gốc → tạo gốc mới, <strong>cây cao thêm 1 mức</strong> (đây là cách duy nhất cây cao lên).</li>
+</ol>
+
+<p>Ví dụ (không phải đề): bậc 3, chèn 10, 20, 30, 40, 50, 60, 70. Chèn 30 → [10 20 30] tràn, đẩy 20 lên làm gốc mới. Chèn 50 → [30 40 50] tràn, đẩy 40 lên → gốc [20 40]. Chèn 70 → [50 60 70] tràn, đẩy 60 lên → gốc [20 40 60] <em>cũng tràn</em> → tách tiếp, đẩy 40 lên làm gốc mới:</p>
+
+<figure class="tree" data-kind="btree" data-order="3" data-insert="10,20,30,40,50,60,70">
+<figcaption>Bậc 3 sau khi chèn 10…70 — tách lan từ lá lên gốc, cây cao 3 mức. Câu 5 đề mẫu (15 khóa) tự làm ở phần Luyện tập.</figcaption>
+</figure>
+
+<h2>3. Xóa: bốn tình huống, theo quy ước đề</h2>
+<p>Cây cho Câu 6 (bậc 5, Hình 1):</p>
+
+<figure class="tree" data-kind="btree" data-order="5" data-tree='{"k":[25],"c":[{"k":[12,18],"c":[{"k":[5,8],"c":[]},{"k":[14,15],"c":[]},{"k":[20,22,24],"c":[]}]},{"k":[45,60],"c":[{"k":[35,40],"c":[]},{"k":[50,55],"c":[]},{"k":[80,90],"c":[]}]}]}'>
+<figcaption>Hình 1 (đề) — gốc [25]; mức 1: [12 18] [45 60]; lá: [5 8] [14 15] [20 22 24] [35 40] [50 55] [80 90].</figcaption>
+</figure>
+
+<p>Gặp khóa x cần xóa, xử lý theo thứ tự:</p>
+<ol>
+<li><strong>x ở lá, lá vẫn đủ khóa</strong> sau khi bỏ x → chỉ bỏ x, xong.</li>
+<li><strong>x ở node trong</strong> → <strong>thế mạng</strong>: thay x bằng khóa <strong>lớn nhất nhỏ hơn x</strong> (nằm ở lá phải nhất của cây con trái của x), rồi quay về tình huống xóa khóa thế mạng ở lá.</li>
+<li><strong>Lá thiếu khóa (Underflow)</strong> — còn &lt; ⌈m/2⌉ − 1 khóa → <strong>mượn qua cha</strong> từ anh em kề <em>dư khóa</em> (Redistribution): một khóa của anh em lên thay khóa phân cách, khóa phân cách cũ xuống node thiếu. Ưu tiên mượn ở node liền trước; nếu node liền trước chỉ đủ tối thiểu, mượn node liền sau.<span class="sidenote">Thuật ngữ Underflow (dưới mức tối thiểu), Redistribution (mượn khóa qua cha) và Concatenation — còn gọi Catenation (gộp node anh em cùng khóa phân cách) theo <a href="https://users.cs.utah.edu/~pandey/courses/cs6530/fall23/papers/trees/p121-comer.pdf">Comer, <em>The Ubiquitous B-Tree</em>, ACM Computing Surveys 1979</a>.</span></li>
+<li><strong>Không mượn được</strong> (mọi anh em kề chỉ đủ tối thiểu) → <strong>Catenation</strong>: gộp node thiếu + khóa phân cách của cha + node anh em kề (ưu tiên node liền trước — đề quy ước rõ). Cha mất một khóa ⇒ cha có thể Underflow → xử lý tiếp ở cha. Cha là gốc mà rỗng → con duy nhất lên làm gốc, <strong>cây thấp đi 1 mức</strong>.</li>
+</ol>
+
+<p><strong>Ví dụ 1 — xóa 25 (node trong, không Underflow):</strong> thế mạng = 24 (lá phải nhất của cây con trái) lên gốc; lá [20 22 24] còn [20 22] — đủ 2 khóa, xong.</p>
+
+<figure class="tree" data-kind="btree" data-order="5" data-tree='{"k":[25],"c":[{"k":[12,18],"c":[{"k":[5,8],"c":[]},{"k":[14,15],"c":[]},{"k":[20,22,24],"c":[]}]},{"k":[45,60],"c":[{"k":[35,40],"c":[]},{"k":[50,55],"c":[]},{"k":[80,90],"c":[]}]}]}' data-delete="25">
+<figcaption>Hình 1 sau khi xóa 25.</figcaption>
+</figure>
+
+<p><strong>Ví dụ 2 — xóa 5 (Catenation dây chuyền):</strong> lá [8] Underflow; [8] là con đầu nên không có node liền trước, anh liền sau [14 15] chỉ đủ tối thiểu → Catenation với node liền sau: [8] + 12 + [14 15] = [8 12 14 15]. Cha còn [18] → Underflow; anh [45 60] không dư → Catenation [18] + 25 + [45 60]. Gốc rỗng → cây thấp đi 1 mức:</p>
+
+<figure class="tree" data-kind="btree" data-order="5" data-tree='{"k":[25],"c":[{"k":[12,18],"c":[{"k":[5,8],"c":[]},{"k":[14,15],"c":[]},{"k":[20,22,24],"c":[]}]},{"k":[45,60],"c":[{"k":[35,40],"c":[]},{"k":[50,55],"c":[]},{"k":[80,90],"c":[]}]}]}' data-delete="5">
+<figcaption>Hình 1 sau khi xóa 5 — gốc [18 25 45 60]. Câu 6a, 6b đề mẫu tự làm ở phần Luyện tập.</figcaption>
+</figure>
+
+<div class="callout trap">
+<p><strong>Bẫy 3:</strong> câu b xóa từ <strong>Hình 1 gốc</strong>, không xóa từ cây kết quả câu a — đề nhắc sẵn, đỡ mất 0.5đ oan. <strong>Bẫy 4:</strong> mượn được chỉ khi anh em kề <em>dư</em> khóa (&gt; tối thiểu); anh em bằng đúng tối thiểu thì phải Catenation. <strong>Bẫy 5:</strong> sau Catenation phải kiểm tra <em>cha</em> — Underflow lan lên; dừng chỉ khi cha đủ khóa hoặc cha là gốc rỗng. <em>Lưu ý:</em> quy ước "mượn ưu tiên node liền trước" là giả định của giáo trình này (đề chỉ nêu rõ cho Catenation) — đề bài nào nêu quy ước thì theo đề.</p>
+</div>
+
+<h2>4. Mã giả tìm kiếm &amp; duyệt</h2>
+<p>Tìm kiếm: tại mỗi node, đi về con đúng khoảng — giống tìm kiếm nhị phân nhưng rẽ theo khoảng giữa các khóa:</p>
+<pre><code>SearchBTree(node, x):
+    i = 0
+    while i &lt; số khóa của node và x &gt; k[i]:    // tìm khoảng của x
+        i = i + 1
+    nếu i &lt; số khóa của node và x == k[i]:
+        trả về node                            // tìm thấy x tại k[i]
+    nếu node là lá:
+        trả về "không tìm thấy"
+    trả về SearchBTree(con thứ i của node, x)</code></pre>
+<p>Duyệt in tăng dần (giống duyệt LNR của BST): với mỗi khóa, in xong cây con bên trái của nó rồi in khóa; kết thúc in cây con phải nhất:</p>
+<pre><code>TraverseBTree(node):
+    với i = 0 .. số khóa của node − 1:
+        nếu node không là lá: TraverseBTree(con thứ i)
+        in k[i]
+    nếu node không là lá: TraverseBTree(con cuối cùng)</code></pre>
+<p>Kiểm tra bằng mắt: duyệt Hình 1 phải ra <code>5 8 12 14 15 18 20 22 24 25 35 40 45 50 55 60 80 90</code> — đúng thứ tự tăng dần.</p>
+
+<h2>5. Phòng thử: xóa từng khóa, đọc nhật ký</h2>
+<p>Lab dưới nạp sẵn Hình 1 — gõ khóa rồi <em>Xóa</em>, nhật ký từng bước cho biết có Underflow, mượn hay Catenation. Lab bậc 3 bắt đầu rỗng: chèn lại 15 khóa của Câu 5 để tự chấm. Đối chiếu thêm với <a href="https://www.cs.usfca.edu/~galles/visualization/BTree.html">B-Tree Visualization — USFCA</a> (chọn Max Degree 3 / 5); lưu ý quy ước xóa của nó có thể khác đề (thế mạng, hướng mượn).</p>
+
+<div class="tree-lab" data-kind="btree" data-order="5" data-tree='{"k":[25],"c":[{"k":[12,18],"c":[{"k":[5,8],"c":[]},{"k":[14,15],"c":[]},{"k":[20,22,24],"c":[]}]},{"k":[45,60],"c":[{"k":[35,40],"c":[]},{"k":[50,55],"c":[]},{"k":[80,90],"c":[]}]}]}'>
+</div>
+
+<div class="tree-lab" data-kind="btree" data-order="3">
+</div>
+
+<h2>Luyện tập — tự nhớ lại, đừng cuộn lên</h2>
+
+<div class="q">
+  <p class="q-prompt">B-Tree bậc 3: một node (khác gốc) tràn khi chứa đủ bao nhiêu khóa và khi đó xử lý thế nào?</p>
+  <p>Tràn khi đủ <span class="blank" data-accept='["3","ba"]'></span> khóa → tách node, khóa <span class="blank" data-accept='["giữa","giua"]'></span> đẩy lên node cha.</p>
+  <div class="q-explain">Bậc 3: tối đa 2 khóa; đủ 3 khóa là tràn. Tách thành 1 | 1, khóa giữa lên cha; cha tràn thì tách tiếp — tách tới gốc thì cây cao thêm 1 mức.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Node khác gốc của B-Tree bậc 5 chứa tối đa bao nhiêu khóa?</p>
+  <ol class="q-options">
+    <li><button>2 khóa</button></li>
+    <li><button>3 khóa</button></li>
+    <li><button data-correct>4 khóa</button></li>
+    <li><button>5 khóa</button></li>
+  </ol>
+  <div class="q-explain">Bậc m → tối đa m − 1 khóa: bậc 5 tối đa 4 khóa. Node đủ 5 khóa là tràn, phải tách. Tối thiểu của node khác gốc: ⌈5/2⌉ − 1 = 2 khóa.</div>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">Câu 5 đề mẫu: B-Tree bậc 3 rỗng, chèn lần lượt 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80. Vẽ cây cuối (4 mức).</p>
+  <div class="q-explain">Gốc [45]; mức 1: [25] [65]; mức 2: [15] [35] [55] [75]; lá: [10] [20] [30] [40] [50] [60] [70] [80]. Mọi node đúng 1 khóa (tối thiểu bậc 3), mọi lá cùng mức. Cây cao thêm 1 mức ở lần chèn 20, 40 và 80 (chèn 80: [70 75 80] tách → [55 65 75] tách → gốc [25 45 65] tách).
+  <figure class="tree" data-kind="btree" data-order="3" data-insert="10,15,20,25,30,35,40,45,50,55,60,65,70,75,80"><figcaption>Đáp án Câu 5.</figcaption></figure></div>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">Câu 6a đề mẫu: từ Hình 1 (bậc 5), xóa 20. Vẽ lại cây.</p>
+  <div class="q-explain">20 ở lá [20 22 24]; bỏ 20 còn [22 24] — 2 khóa, đúng tối thiểu, không Underflow. Còn lại y nguyên Hình 1: gốc [25]; [12 18] [45 60]; lá [5 8] [14 15] [22 24] [35 40] [50 55] [80 90]. Sinh viên hay sai ở chỗ vẽ thừa Catenation cho node vẫn đủ khóa.
+  <figure class="tree" data-kind="btree" data-order="5" data-tree='{"k":[25],"c":[{"k":[12,18],"c":[{"k":[5,8],"c":[]},{"k":[14,15],"c":[]},{"k":[20,22,24],"c":[]}]},{"k":[45,60],"c":[{"k":[35,40],"c":[]},{"k":[50,55],"c":[]},{"k":[80,90],"c":[]}]}]}' data-delete="20"><figcaption>Đáp án Câu 6a.</figcaption></figure></div>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">Câu 6b đề mẫu: từ Hình 1 (bậc 5), xóa 60. Vẽ lại cây.</p>
+  <div class="q-explain">60 ở node trong → thế mạng 55 (lớn nhất nhỏ hơn 60), xóa 55 ở lá [50 55] còn [50] → Underflow. Anh em kề [35 40], [80 90] đều đúng tối thiểu → Catenation với node liền trước: [35 40] + 45 + [50] = [35 40 45 50]. Cha [55] Underflow, anh [12 18] không dư → Catenation: [12 18] + 25 + [55]. Gốc rỗng → cây thấp 1 mức: gốc [12 18 25 55]; lá [5 8] [14 15] [20 22 24] [35 40 45 50] [80 90].
+  <figure class="tree" data-kind="btree" data-order="5" data-tree='{"k":[25],"c":[{"k":[12,18],"c":[{"k":[5,8],"c":[]},{"k":[14,15],"c":[]},{"k":[20,22,24],"c":[]}]},{"k":[45,60],"c":[{"k":[35,40],"c":[]},{"k":[50,55],"c":[]},{"k":[80,90],"c":[]}]}]}' data-delete="60"><figcaption>Đáp án Câu 6b.</figcaption></figure></div>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">B-Tree bậc 5 rỗng, chèn lần lượt 2, 4, 6, 8, 10, 12, 14, 16. Vẽ cây cuối (2 lần tách).</p>
+  <div class="q-explain">Chèn 2, 4, 6, 8 → gốc [2 4 6 8] (đủ 4, max). Chèn 10 → tràn [2 4 6 8 10] → tách, đẩy 6: gốc mới [6], lá [2 4] và [8 10]. Chèn 12 → [8 10 12]. Chèn 14 → [8 10 12 14]. Chèn 16 → tràn → đẩy 12: gốc [6 12], lá [2 4] [8 10] [14 16]. Kết quả: gốc [6 12]; mức 1: [2 4] [8 10] [14 16].</div>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">Từ Hình 1 (bậc 5), xóa 15 — lần này anh em kề có node dư khóa. Vẽ lại cây và cho biết mượn khóa nào.</p>
+  <div class="q-explain">Bỏ 15, lá [14] Underflow (1 &lt; 2). Node liền trước [5 8] chỉ đủ tối thiểu; node liền sau [20 22 24] dư (3 khóa) → mượn qua cha (Redistribution): khóa 20 lên cha thay 18, khóa 18 xuống node thiếu. Kết quả: gốc [25]; mức 1: [12 20] [45 60]; lá: [5 8] [14 18] [22 24] [35 40] [50 55] [80 90]. Cây vẫn 3 mức.</div>
+</div>
+
+<h3>Ôn lại bài trước</h3>
+
+<div class="q">
+  <p class="q-prompt">BST (Bài 05): xóa node có đúng 2 con thì thay khóa của node bằng phần tử nào, rồi xóa phần tử đó?</p>
+  <p>Thay bằng phần tử <span class="blank" data-accept='["nhỏ nhất của","nho nhat cua","nhỏ nhất","nho nhat"]' data-width="14"></span> cây con phải (đề quy ước; bài khác có thể dùng lớn nhất cây con trái).</p>
+  <div class="q-explain">Phần tử nhỏ nhất cây con phải = đi hết sang trái của cây con phải. Sau khi thay, node đó có tối đa 1 con nên xóa được dễ — BST không bao giờ "cao thêm" khi xóa.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">DSLK đơn (Bài 04): chèn p ngay sau Q, Q có thể là pTail. Điền lệnh thứ hai (lệ thuộc lệnh thứ nhất):</p>
+  <pre><code>p-&gt;pNext = Q-&gt;pNext;
+<span class="blank" data-accept='["Q-&gt;pNext = p","q-&gt;pnext = p"]' data-width="16"></span></code></pre>
+  <div class="q-explain">Phải gán p-&gt;pNext trước, rồi mới nối Q-&gt;pNext = p — làm ngược lại mất phần tử sau Q. Nếu Q là pTail thì thêm: if (L.pTail == Q) L.pTail = p.</div>
+</div>
+
+<div class="source">
+<p><a href="https://users.cs.utah.edu/~pandey/courses/cs6530/fall23/papers/trees/p121-comer.pdf">D. Comer — <em>The Ubiquitous B-Tree</em>, ACM Computing Surveys 1979</a> (PDF, ~30 phút đọc lướt mục insert/delete): nguồn gốc thuật ngữ Underflow, Redistribution, Concatenation mà đề dùng. Tự kiểm tra vẽ cây bằng <a href="https://www.cs.usfca.edu/~galles/visualization/BTree.html">B-Tree Visualization — USFCA</a>.</p>
+</div>
+
+<div class="ask"><p>Chỗ nào chưa rõ — ví dụ mượn khóa khi cả hai anh em đều dư thì chọn bên nào, hay Catenation ở node trong khác lá xử lý thế nào — cứ hỏi agent ngay trong cuộc trò chuyện.</p></div>
+
+<nav class="pager">
+  <a href="0005-cay-nhi-phan-tim-kiem.html">← Bài 05 · BST</a>
+  <a href="0007-bang-bam.html">Bài 07 · Bảng băm →</a>
+</nav>
+</main>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Danh sách liên kết đơn — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/quiz.js" defer></script>
+</head>
+<body>
+<main>
+<nav class="crumbs">
+  <a href="../index.html">← Lộ trình ôn</a>
+  <a href="../reference/glossary.html">Thuật ngữ</a>
+  <a href="../reference/code-mau-cpp.html">Code mẫu C++</a>
+</nav>
+
+<p class="kicker">Bài 04 · ~15 phút · Câu 4 &amp; Câu 9 đề mẫu (2.0đ)</p>
+<h1>Danh sách liên kết đơn</h1>
+<p class="subtitle">DSLK đơn với pHead–pTail: thêm, xóa, tìm, duyệt — rồi áp ngay vào cộng hai đa thức.</p>
+
+<div class="goal"><strong>Thắng lợi của bài:</strong> viết tay được <code>add_Y_after_X</code> đúng 4 chỗ trống (không quên cập nhật pTail) và hàm <code>Sum</code> cộng hai đa thức giữ số mũ giảm dần, bỏ hệ số 0 — trọn 2.0đ của Câu 4 + Câu 9.</div>
+
+<div class="callout exam">
+<p>Câu 4 (1.0đ): điền chỗ trống hoàn chỉnh hàm <code>add_Y_after_X(L, Y, X)</code> thêm phần tử Y <em>sau</em> phần tử X trong DSLK đơn — cho sẵn struct NODE/LIST, <code>searchNode</code> (trả về node chứa X, NULL nếu không thấy) và <code>CreateNode</code>. Trống ở 4 chỗ: lệnh khi <code>Q == NULL</code>, hai lệnh nối p vào sau Q, lệnh cập nhật <code>L.pTail</code>.</p>
+</div>
+
+<h2>1. Khung NODE/LIST và bốn lệnh nền</h2>
+<p>Mọi câu DSLK của đề đều chạy trên đúng hai struct này. Node giữ dữ liệu + con trỏ <code>pNext</code>; danh sách chỉ cần nhớ node đầu (<code>pHead</code>) và node cuối (<code>pTail</code>) — có <code>pTail</code> thì thêm cuối chỉ tốn O(1), không phải duyệt cả danh sách.<span class="sidenote">Pat Morin, <a href="https://opendatastructures.org/ods-cpp/3_1_Singly_Linked_List.html">Open Data Structures (bản C++), mục 3.1 SLList</a>: SLList giữ <code>head</code> và <code>tail</code>; thêm vào danh sách rỗng phải đặt cả <code>tail</code>, xóa node cuối cùng phải đặt <code>tail = NULL</code> — đúng quy tắc pHead/pTail bên dưới.</span></p>
+<pre>
+pHead → [2|•] → [6|•] → [5|∅] ← pTail        (∅ = NULL: node cuối)
+</pre>
+<pre><code>struct NODE {
+    int info;
+    NODE* pNext;
+};
+struct LIST {
+    NODE* pHead;
+    NODE* pTail;
+};
+void CreateEmptyList(LIST &amp;L) {
+    L.pHead = L.pTail = NULL;
+}
+NODE* CreateNode(int x) {
+    NODE* p = new NODE;
+    p->info = x;
+    p->pNext = NULL;            // node mới luôn trỏ NULL trước khi nối
+    return p;
+}
+void AddHead(LIST &amp;L, NODE* p) {
+    if (L.pHead == NULL) L.pHead = L.pTail = p;   // rỗng: p là đầu lẫn cuối
+    else { p->pNext = L.pHead; L.pHead = p; }
+}
+void AddTail(LIST &amp;L, NODE* p) {
+    if (L.pHead == NULL) L.pHead = L.pTail = p;
+    else { L.pTail->pNext = p; L.pTail = p; }
+}</code></pre>
+<p>Mọi hàm thêm/xóa đều rơi vào hai nhánh: <strong>danh sách rỗng</strong> (pHead và pTail phải đổi <em>cùng nhau</em>) và <strong>thao tác chạm đến node đầu/cuối</strong> (phải cập nhật đúng một trong hai con trỏ đó). Nhớ hai nhánh này là tự kiểm tra được mọi bài.</p>
+
+<h2>2. Duyệt để xử lý theo yêu cầu: một khuôn dùng cho mọi bài</h2>
+<p>Đề hay cho "duyệt để xử lý theo yêu cầu" — đếm, tính tổng, tìm max, in theo điều kiện. Tất cả dùng chung một khuôn, chỉ thay thân vòng lặp:</p>
+<pre><code>int CountNode(LIST L) {
+    int d = 0;
+    for (NODE* p = L.pHead; p != NULL; p = p->pNext)
+        d++;
+    return d;
+}</code></pre>
+<p>Cùng khuôn: tổng (<code>d += p->info;</code>), tìm max (<code>if (p->info &gt; m) m = p->info;</code>), đếm phần tử chẵn (thêm <code>if (p->info % 2 == 0)</code>)… Duyệt luôn bắt đầu từ <code>L.pHead</code> và dừng khi <code>p == NULL</code>.</p>
+
+<h2>3. Thêm Y sau X — add_Y_after_X (Câu 4)</h2>
+<p>Tìm X trước (đề cho sẵn <code>searchNode</code>), rồi nối node mới p vào giữa Q và node kế tiếp của Q:</p>
+<pre><code>NODE* searchNode(LIST L, int x) {
+    for (NODE* p = L.pHead; p != NULL; p = p->pNext)
+        if (p->info == x) return p;
+    return NULL;
+}
+
+void add_Y_after_X(LIST &amp;L, int Y, int X) {
+    NODE *Q = searchNode(L, X);       // đề cho sẵn
+    if (Q == NULL) return;            // không có X: không chèn, dừng ngay
+    NODE* p = CreateNode(Y);
+<span class="hl">    p->pNext = Q->pNext;              // (1) TRƯỚC: p móc vào node sau Q</span>
+<span class="hl">    Q->pNext = p;                     // (2) SAU: Q mới móc vào p</span>
+    if (L.pTail == Q) L.pTail = p;    // X là node cuối: p thành pTail mới
+}</code></pre>
+<pre>
+Trước:  ... --> [Q|•-] --> [r|•-] --> ...     p = [Y|•-]--> NULL
+                   r là node ngay sau Q        (mới tạo, chưa nối)
+
+(1) p->pNext = Q->pNext;   p móc giữ r trước -- r không bị mất
+(2) Q->pNext = p;          Q mới trỏ sang p
+
+Sau:    ... --> [Q|•-] --> [Y|•-] --> [r|•-] --> ...
+</pre>
+<div class="callout trap">
+<p>Đề chấm gắt 3 điểm. (1) <code>if (Q == NULL)</code> phải <code>return;</code> ngay — không có X mà vẫn chạy tiếp thì <code>Q->pNext</code> dereference con trỏ NULL. (2) Hai lệnh nối phải đúng thứ tự: <code>p->pNext = Q->pNext;</code> TRƯỚC, <code>Q->pNext = p;</code> SAU — viết đảo là node Y tự trỏ vào chính nó và mất hết phần sau Q (kiểm bằng mã: sau thứ tự sai, <code>p->pNext == p</code>). (3) X là node cuối thì phải <code>L.pTail = p;</code> — quên là pTail vẫn trỏ node cũ, mọi AddTail sau đó gắn sai chỗ.</p>
+</div>
+
+<h2>4. Xóa node: RemoveHead và RemoveX (giữ prev, cập nhật pTail)</h2>
+<p>Xóa đầu thì dời pHead; xóa một node bất kỳ thì phải nhớ node đứng <em>trước</em> nó (<code>prev</code>) để nối tắt qua node bị xóa:</p>
+<pre>
+Xóa node p (node trước là prev):
+Trước:  [prev|•-] --> [p|•-] --> [r|•-]
+Sau:    [prev|•-] ---------------> [r|•-]     prev->pNext = p->pNext; delete p;
+</pre>
+<pre><code>void RemoveHead(LIST &amp;L) {
+    if (L.pHead == NULL) return;            // rỗng: hết việc
+    NODE* p = L.pHead;
+    L.pHead = p->pNext;
+    delete p;
+    if (L.pHead == NULL) L.pTail = NULL;    // vừa xóa node duy nhất
+}
+
+bool RemoveX(LIST &amp;L, int x) {
+    NODE *prev = NULL, *p = L.pHead;
+    while (p != NULL &amp;&amp; p->info != x) {     // tìm x, nhớ node trước
+        prev = p;
+        p = p->pNext;
+    }
+    if (p == NULL) return false;            // không có x
+    if (prev == NULL) L.pHead = p->pNext;   // x ngay đầu: dời pHead
+    else prev->pNext = p->pNext;            // nhảy qua node p
+    if (p == L.pTail) L.pTail = prev;       // x là node cuối: pTail lùi về prev
+    delete p;
+    return true;
+}</code></pre>
+<p>Ba trường hợp đặc biệt luôn phải nghĩ đến: x ở <strong>đầu</strong> (prev == NULL), x ở <strong>cuối</strong> (<code>L.pTail = prev</code>), và x là <strong>node duy nhất</strong> (cả hai: pHead về NULL, pTail về NULL).</p>
+
+<h2>5. Câu 9 — đa thức bằng DSLK: DATHUC, Input, Sum</h2>
+<div class="callout exam">
+<p>Câu 9 (1.0đ, tự luận): lưu đa thức thưa một biến bằng DSLK đơn, mỗi node một đơn thức (HeSo, SoMu), số mũ giảm dần — ví dụ P(x) = 100x⁷⁰ + 25x¹⁵ − 6x³ + 9. Cho sẵn CreateNode, AddTail, CreateEmptyDATHUC, Input(heso, somu), Output. a) Định nghĩa DATHUC (0.25đ); b) <code>Input(DATHUC&amp;)</code> — nhập số lượng, rồi từng hệ số–số mũ (0.25đ); c) <code>Sum</code> cộng hai đa thức, trả về đa thức mới cũng giảm dần, không chứa đơn thức hệ số 0 (0.5đ).</p>
+</div>
+<p><strong>a) Chỉ khác bài thường ở kiểu dữ liệu của node</strong> — vẫn pHead/pTail:</p>
+<pre><code>struct DONTHUC {
+    float HeSo;
+    int SoMu;
+};
+struct NODE {
+    DONTHUC info;
+    NODE* pNext;
+};
+struct DATHUC {          // câu a: trả lời đúng 1 dòng struct này
+    NODE* pHead;
+    NODE* pTail;
+};</code></pre>
+<p><strong>b) Input: đếm n rồi AddTail từng đơn thức</strong> — đề quy ước nhập theo số mũ giảm dần, nên AddTail giữ nguyên thứ tự đó:</p>
+<pre><code>void Input(DATHUC &amp;poly) {
+    CreateEmptyDATHUC(poly);
+    int n; cin &gt;&gt; n;
+    for (int i = 0; i &lt; n; i++) {
+        float hs; int sm;
+        cin &gt;&gt; hs &gt;&gt; sm;
+        AddTail(poly, CreateNode(Input(hs, sm)));
+    }
+}</code></pre>
+<p><strong>c) Sum: trộn hai danh sách đã giảm dần</strong> — như cộng hai dãy đã sắp xếp: so sánh số mũ của node đang xét mỗi bên, lấy bên lớn hơn; bằng nhau thì cộng hệ số; còn sót bên nào thì AddTail nốt. Nhánh "bằng nhau" là chỗ đề chấm: tổng hệ số bằng 0 thì <em>không thêm node nào</em>.</p>
+<pre><code>DATHUC Sum(DATHUC poly1, DATHUC poly2) {
+    DATHUC kq; CreateEmptyDATHUC(kq);
+    NODE *p = poly1.pHead, *q = poly2.pHead;
+    while (p &amp;&amp; q) {
+        if (p->info.SoMu &gt; q->info.SoMu) {          // bên lớn hơn thắng
+            AddTail(kq, CreateNode(p->info));
+            p = p->pNext;
+        }
+        else if (p->info.SoMu &lt; q->info.SoMu) {
+            AddTail(kq, CreateNode(q->info));
+            q = q->pNext;
+        }
+        else {                                       // số mũ bằng nhau
+            float hs = p->info.HeSo + q->info.HeSo;
+            if (hs != 0)                             // hệ số 0: bỏ luôn
+                AddTail(kq, CreateNode(Input(hs, p->info.SoMu)));
+            p = p->pNext;
+            q = q->pNext;
+        }
+    }
+    for (; p; p = p->pNext) AddTail(kq, CreateNode(p->info));
+    for (; q; q = q->pNext) AddTail(kq, CreateNode(q->info));
+    return kq;
+}</code></pre>
+<p>Chạy tay (đã kiểm bằng mã): poly1 = 5x³ + 2x + 1, poly2 = −5x³ + 4x:</p>
+<table class="grid">
+<tr><th>bước</th><th>p (poly1)</th><th>q (poly2)</th><th>số mũ</th><th>hành động</th><th>kq</th></tr>
+<tr><td>1</td><td>5x³</td><td>−5x³</td><td>3 = 3</td><td>hs = 5 + (−5) = 0 → bỏ</td><td>(rỗng)</td></tr>
+<tr><td>2</td><td>2x¹</td><td>4x¹</td><td>1 = 1</td><td>hs = 6 → thêm</td><td>6x¹</td></tr>
+<tr><td>3</td><td>1x⁰</td><td>NULL</td><td>—</td><td>q hết → AddTail nốt p</td><td>6x¹ 1x⁰</td></tr>
+</table>
+<p>Kết quả: Sum = 6x + 1 — số hạng x³ <em>biến mất</em> vì hệ số 0.</p>
+<div class="callout trap">
+<p>Ba lỗi mất điểm Câu 9: (1) vẫn in đơn thức hệ số 0 — 5x³ + (−5x³) phải <strong>bỏ</strong>, không được ghi 0x³; (2) làm mất thứ tự số mũ giảm dần — trộn hai danh sách đã giảm dần thì tự ra kết quả giảm dần, chỉ dùng AddTail, đừng AddHead; (3) ghi đắp lên poly1/poly2 — đề đòi đa thức mới, vậy cứ <code>CreateNode</code> node mới (như code trên), không tái dùng node cũ.</p>
+</div>
+
+<h2>Luyện tập — tự nhớ lại, đừng cuộn lên</h2>
+
+<div class="q">
+  <p class="q-prompt">Câu 4 đề mẫu — điền 4 chỗ trống (bố cục đúng như đề):</p>
+  <pre><code>void add_Y_after_X(LIST &amp;L, int Y, int X) {
+    NODE *Q = searchNode(L, X);
+    // hàm searchNode trả về node chứa X nếu tìm thấy X
+    // trả về NULL nếu không tìm thấy X
+
+    if (Q == NULL) <span class="blank" data-accept='["return;","return"]' data-width="8"></span>;
+
+    NODE* p = CreateNode(Y);
+
+    p->pNext = <span class="blank" data-accept='["Q->pNext"]' data-width="10"></span>;
+
+    Q->pNext = <span class="blank" data-accept='["p","p;"]' data-width="4"></span>;
+
+    if (L.pTail == Q)
+
+        L.pTail = <span class="blank" data-accept='["p","p;"]' data-width="4"></span>;
+}</code></pre>
+  <div class="q-explain">Không có X thì return ngay. Nối: p giữ node sau Q trước (<code>p->pNext = Q->pNext;</code>), rồi Q mới trỏ sang p. X là node cuối thì p là pTail mới. Đảo hai lệnh nối là mất phần sau Q.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Danh sách L đang là <code>2 6 5</code> (pHead → 2, pTail → 5). Gọi <code>add_Y_after_X(L, 8, 5)</code>. Danh sách in ra và <code>pTail->info</code> sau lời gọi?</p>
+  <p>Danh sách: <span class="blank" data-accept='["2 6 5 8"]' data-width="10"></span> &nbsp; pTail->info: <span class="blank" data-accept='["8"]' data-width="3"></span></p>
+  <div class="q-explain">X = 5 chính là node cuối ⇒ node 8 mới chèn thành node cuối: phải có <code>L.pTail = p</code>. Danh sách <code>2 6 5 8</code>, pTail->info = 8. Trả lời 5 là quên cập nhật pTail.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Tiếp đoạn trên (danh sách <code>2 6 5 8</code>): gọi <code>RemoveHead(L)</code> rồi <code>RemoveX(L, 8)</code>. Danh sách và <code>pTail->info</code>?</p>
+  <p>Danh sách: <span class="blank" data-accept='["6 5"]' data-width="6"></span> &nbsp; pTail->info: <span class="blank" data-accept='["5"]' data-width="3"></span></p>
+  <div class="q-explain">RemoveHead bỏ node 2 ⇒ <code>6 5 8</code>. RemoveX(8) xóa node cuối: prev là node 5, nên <code>L.pTail = prev</code> ⇒ pTail->info = 5, còn <code>6 5</code>.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Danh sách <code>1 2 3 4</code>, chèn 9 sau node 2 nhưng viết <em>đảo thứ tự</em>: <code>Q->pNext = p;</code> trước, <code>p->pNext = Q->pNext;</code> sau. Khi đó <code>p->pNext</code> trỏ tới:</p>
+  <ol class="q-options">
+    <li><button data-correct>chính node 9</button></li>
+    <li><button>node số 3</button></li>
+    <li><button>node số 2</button></li>
+    <li><button>node số 4</button></li>
+  </ol>
+  <div class="q-explain">Lệnh 1 cho Q->pNext = p (node 3, 4 rớt khỏi chuỗi). Lệnh 2 đọc lại Q->pNext — giờ đã là p — nên p->pNext = p: node 9 tự trỏ vào chính nó, duyệt tới đây là lặp vô hạn. Kiểm bằng mã: sau thứ tự sai, p->pNext == p.</div>
+</div>
+
+<div class="q" data-kind="self">
+  <p class="q-prompt">Viết ra giấy hàm <code>int CountEven(LIST L)</code> đếm số node có <code>info</code> chẵn. Với danh sách <code>2 7 4 9 6 5</code> hàm trả về bao nhiêu?</p>
+  <div class="q-explain"><pre><code>int CountEven(LIST L) {
+    int d = 0;
+    for (NODE* p = L.pHead; p != NULL; p = p->pNext)
+        if (p->info % 2 == 0)
+            d++;
+    return d;
+}</code></pre>
+  Danh sách <code>2 7 4 9 6 5</code> → 3 (các node 2, 4, 6). Cùng khuôn đổi được thành: tổng — <code>d += p->info;</code>; tìm max — <code>if (p->info &gt; m) m = p->info;</code>.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Câu 9b — điền lệnh thêm đơn thức vừa nhập vào cuối đa thức:</p>
+  <pre><code>void Input(DATHUC &amp;poly) {
+    CreateEmptyDATHUC(poly);
+    int n; cin &gt;&gt; n;
+    for (int i = 0; i &lt; n; i++) {
+        float hs; int sm;
+        cin &gt;&gt; hs &gt;&gt; sm;
+        <span class="blank" data-accept='["AddTail(poly, CreateNode(Input(hs, sm)))"]' data-width="44"></span>;
+    }
+}</code></pre>
+  <div class="q-explain">Tạo node đơn thức mới rồi AddTail — đề quy ước nhập theo số mũ giảm dần nên AddTail giữ đúng thứ tự đó.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Câu 9c — nhánh "số mũ bằng nhau" của Sum, điền 2 chỗ trống:</p>
+  <pre><code>else {   // hai node đang xét có số mũ bằng nhau
+    float hs = p->info.HeSo + q->info.HeSo;
+    if (<span class="blank" data-accept='["hs != 0","hs!=0","hs &lt;&gt; 0"]' data-width="8"></span>)
+        AddTail(kq, CreateNode(Input(hs, <span class="blank" data-accept='["p->info.SoMu","q->info.SoMu"]' data-width="14"></span>)));
+    p = p->pNext;
+    q = q->pNext;
+}</code></pre>
+  <div class="q-explain">Tổng hệ số khác 0 mới thêm node; số mũ lấy bên nào cũng được vì hai bên bằng nhau. Sau nhánh này <em>cả hai</em> cùng tiến: <code>p = p->pNext; q = q->pNext;</code> — chỉ tiến một bên là hai node bằng nhau bị xét lại mãi (lặp vô hạn).</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">poly1 = 3x⁴ + x; poly2 = −3x⁴ + 2x + 5. <code>Sum(poly1, poly2)</code> = ?</p>
+  <ol class="q-options">
+    <li><button data-correct>3x + 5</button></li>
+    <li><button>3x + 4</button></li>
+    <li><button>1x + 5</button></li>
+    <li><button>2x + 5</button></li>
+  </ol>
+  <div class="q-explain">x⁴: 3 + (−3) = 0 → triệt tiêu, không xuất hiện trong kết quả. x: 1 + 2 = 3. Hằng số: 5. Kết quả 3x + 5 (đã kiểm bằng mã: in ra 3x¹ 5x⁰).</div>
+</div>
+
+<h2>Ôn lại các bài trước — sắp xếp &amp; tìm kiếm (Bài 01–03)</h2>
+
+<div class="q">
+  <p class="q-prompt">Selection Sort như đề mẫu (hoán vị gọi <em>vô điều kiện</em> mỗi lượt i) chạy trên mảng 8 phần tử đã tăng dần: số lần hoán vị (swap)?</p>
+  <p>Kết quả: <span class="blank" data-accept='["7","n - 1","n-1"]' data-width="4"></span></p>
+  <div class="q-explain">Mỗi lượt i (i = 0..n−2) gọi swap đúng 1 lần, kể cả khi min là chính a[i] ⇒ n − 1 = 7. Bẫy Câu 3: mảng đã có thứ tự vẫn swap đủ — ai tưởng 0 swap là mất điểm.</div>
+</div>
+
+<div class="q">
+  <p class="q-prompt">Tìm kiếm nhị phân trên mảng 15 phần tử tăng dần, x <em>không có</em> trong mảng: số lần so sánh <code>a[mid]==x</code>?</p>
+  <p>Kết quả: <span class="blank" data-accept='["4"]' data-width="3"></span></p>
+  <div class="q-explain">Xấu nhất ⌊log₂15⌋ + 1 = 3 + 1 = 4 (kiểm bằng mã: mảng 1 3 5 … 29, x = 30 → đúng 4 lần). Nhớ công thức chung ⌊log₂n⌋ + 1.</div>
+</div>
+
+<div class="source">
+<p><a href="https://opendatastructures.org/ods-cpp/3_1_Singly_Linked_List.html">Open Data Structures (C++), Pat Morin — mục 3.1 SLList</a> (~10 phút: xem cách head/tail cập nhật khi thêm/xóa). Xem hoạt hình nối lại con trỏ: <a href="https://visualgo.net/en/list">VisuAlgo — Linked List</a>. Đối chiếu code với chương Danh sách liên kết trong <em>Giáo trình CTDL&amp;GT</em> — Trần Hạnh Nhi, Dương Anh Đức.</p>
+</div>
+
+<div class="ask"><p>Chỗ nào chưa rõ — ví dụ đề bắt <code>return;</code> hay <code>return 0;</code> khi Q == NULL, hay Sum có được tái dùng node của poly1/poly2 không — cứ hỏi agent ngay trong cuộc trò chuyện.</p></div>
+
+<nav class="pager">
+  <a href="0003-quick-heap-sort.html">← Bài 03 · Quick &amp; Heap Sort</a>
+  <a href="0005-cay-nhi-phan-tim-kiem.html">Bài 05 · BST →</a>
+</nav>
+</main>
+</body>
+</html>

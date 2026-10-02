@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mẫu · B-Tree &amp; Bảng băm — Ôn thi CTDL&amp;GT</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/tree.js" defer></script>
+</head>
+<body>
+<main class="wide">
+<nav class="crumbs">
+<a href="../index.html">Lộ trình ôn</a>
+<a href="../reference/glossary.html">Thuật ngữ</a>
+<a href="../reference/code-mau-cpp.html">Code C++</a>
+<span>B-Tree &amp; Bảng băm</span>
+</nav>
+
+<p class="kicker">Phiếu tham chiếu · phần vẽ tay &amp; lý thuyết</p>
+<h1>B-Tree &amp; Bảng băm</h1>
+<p class="subtitle">Hai chương chỉ thi lý thuyết: B-Tree (tạo, xóa, mã giả) và bảng băm (4 phương pháp, quy tắc thêm/xóa/tìm). Mọi cây dưới đây được sinh và kiểm chứng bằng chính bộ mô phỏng <code>tree.js</code>.</p>
+
+<h2>1. B-Tree bậc m — điều kiện phải thuộc</h2>
+<table>
+<tr><th>Điều kiện</th><th>Công thức</th><th>m = 3</th><th>m = 5</th></tr>
+<tr><td>Số khóa tối đa / node</td><td>m − 1</td><td>2</td><td>4</td></tr>
+<tr><td>Số khóa tối thiểu, node ≠ gốc</td><td>⌈m/2⌉ − 1</td><td>1</td><td>2</td></tr>
+<tr><td>Số khóa tối thiểu của gốc</td><td>1</td><td>1</td><td>1</td></tr>
+<tr><td>Node trong có n khóa ⇒</td><td>n + 1 con</td><td colspan="2">mọi node lá cùng mức</td></tr>
+</table>
+<p>Tràn (vượt m − 1 khóa, tức đạt m khóa) → <strong>tách (split)</strong>: khóa đứng giữa (<em>m</em>=3: khóa thứ 2; <em>m</em>=5: khóa thứ 3) đẩy lên cha, phần còn lại chia đôi làm hai node.</p>
+
+<h2>2. Chèn (thêm khóa x)</h2>
+<ol class="steps">
+<li>Tìm <strong>lá</strong> chứa khoảng của x (x &gt; khóa nhỏ nhất ở node trong → đi nhánh con tương ứng, như tìm kiếm B-Tree mục 4).</li>
+<li>Chèn x vào lá, giữ thứ tự tăng.</li>
+<li>Lá tràn (m khóa) → tách, khóa giữa đẩy lên cha; cha tràn → tách tiếp, <strong>lan lên</strong>.</li>
+<li>Gốc tràn → khóa giữa làm <strong>gốc mới</strong>, cây cao thêm 1 mức.</li>
+</ol>
+<p>Kiểm chứng: chèn 10, 15, …, 80 (bước 5) vào B-Tree bậc 3 → gốc <code>[45]</code>, mức 1 <code>[25] [65]</code>, mức 2 <code>[15] [35] [55] [75]</code>, lá <code>[10] [20] [30] [40] [50] [60] [70] [80]</code> (đề mẫu Câu 5 — đã chạy bằng <code>btInsert</code>).</p>
+
+<h2>3. Xóa khóa x — luồng quyết định</h2>
+<ol class="steps">
+<li><strong>x ở node lá</strong>: xóa trực tiếp.</li>
+<li><strong>x ở node trong</strong>: thế mạng = <strong>khóa lớn nhất nhỏ hơn x</strong> (nằm ở lá phải nhất của cây con con trái của x), rồi xóa khóa thế mạng ở lá.<span class="marginnote">Đề mẫu Câu 6 dùng quy ước này. Nguồn thuật ngữ underflow / redistribution / concatenation: <a href="https://users.cs.utah.edu/~pandey/courses/cs6530/fall23/papers/trees/p121-comer.pdf">Comer, <em>The Ubiquitous B-Tree</em>, ACM Computing Surveys 1979</a>.</span></li>
+<li>Lá còn <strong>⌈m/2⌉−1 khóa</strong>? Đủ → xong. Thiếu → <strong>Underflow</strong>:</li>
+<li><strong>Mượn qua cha (Redistribution)</strong>: anh em kề <em>dư khóa</em> thì mượn 1 — khóa phân cách của cha xuống node thiếu, khóa biên của anh em lên thay. <em>[giả định của workspace: ưu tiên node liền trước — hỏi lại giảng viên]</em></li>
+<li>Không anh em dư → <strong>Catenation</strong>: gộp node thiếu + khóa phân cách của cha + node anh em liền trước (ưu tiên liền trước) thành 1 node.</li>
+<li>Cha mất khóa → kiểm tra Underflow ở cha, <strong>lan lên</strong>; gốc còn 0 khóa → con duy nhất lên làm gốc, cây thấp đi 1 mức.</li>
+</ol>
+
+<h2>4. Mã giả tìm kiếm &amp; duyệt B-Tree</h2>
+<div class="cols">
+<div class="card">
+<h3>Tìm kiếm x trong B-Tree bậc m</h3>
+<pre><code>Tìm kiếm(x, node):
+    i = 0
+    while i &lt; node.sokhoa and x &gt; node.k[i]: i++
+    if i &lt; node.sokhoa and x == node.k[i]:
+        return node          <span class="cm">// tìm thấy</span>
+    if node là lá: return NULL <span class="cm">// hết đường</span>
+    return Tìm kiếm(x, node.c[i]) <span class="cm">// nhánh con i</span></code></pre>
+</div>
+<div class="card">
+<h3>Duyệt B-Tree</h3>
+<pre><code>Duyệt(node):
+    if node == NULL: return
+    for i = 0 .. node.sokhoa - 1:
+        Duyệt(node.c[i])      <span class="cm">// con trái của k[i]</span>
+        in node.k[i]
+    Duyệt(node.c[node.sokhoa]) <span class="cm">// con phải cùng</span></code></pre>
+<p>Cho tăng dần đúng thứ tự khóa vì mọi khóa con trái &lt; k[i] &lt; con phải.</p>
+</div>
+</div>
+
+<h2>5. Ví dụ đề mẫu Câu 6 (bậc 5) — vẽ tay xóa</h2>
+<figure class="tree" data-kind="btree" data-tree='{"k":[25],"c":[{"k":[12,18],"c":[{"k":[5,8],"c":[]},{"k":[14,15],"c":[]},{"k":[20,22,24],"c":[]}]},{"k":[45,60],"c":[{"k":[35,40],"c":[]},{"k":[50,55],"c":[]},{"k":[80,90],"c":[]}]}]}'></figure>
+<p><strong>(a) Xóa 20</strong> — 20 ở lá <code>[20 22 24]</code> (3 khóa), xóa còn <code>[22 24]</code> = 2 khóa ≥ tối thiểu → xong, không lan truyền:</p>
+<figure class="tree" data-kind="btree" data-tree='{"k":[25],"c":[{"k":[12,18],"c":[{"k":[5,8],"c":[]},{"k":[14,15],"c":[]},{"k":[22,24],"c":[]}]},{"k":[45,60],"c":[{"k":[35,40],"c":[]},{"k":[50,55],"c":[]},{"k":[80,90],"c":[]}]}]}'></figure>
+<p><strong>(b) Xóa 60</strong> (trên Hình 1 gốc, không phải cây câu a): 60 ở node trong → thế bằng <strong>55</strong>; lá <code>[50]</code> Underflow (1 &lt; 2), hai anh em <code>[35 40]</code>, <code>[80 90]</code> chỉ 2 khóa (không dư) → Catenation <code>[35 40] + 45 + [50] = [35 40 45 50]</code>; cha <code>[55]</code> Underflow, anh <code>[12 18]</code> không dư → Catenation <code>[12 18] + 25 + [55]</code> thành gốc mới, cây thấp 1 mức:</p>
+<figure class="tree" data-kind="btree" data-tree='{"k":[12,18,25,55],"c":[{"k":[5,8],"c":[]},{"k":[14,15],"c":[]},{"k":[20,22,24],"c":[]},{"k":[35,40,45,50],"c":[]},{"k":[80,90],"c":[]}]}'></figure>
+<p>Cả ba hình là kết quả chạy <code>btDelete(…, 5)</code> — khớp đáp án đã kiểm chứng của đề mẫu.</p>
+
+<hr>
+
+<h2>6. Bảng băm — công thức phải thuộc</h2>
+<table>
+<tr><th>Phương pháp</th><th>Công thức dò lần i (i = 0, 1, 2…)</th><th>Ghi chú</th></tr>
+<tr><td>Băm nối kết (separate chaining)</td><td>h(k) = k mod M, đụng độ → thêm vào <strong>danh sách liên kết</strong> tại h(k)</td><td>không dò tuyến</td></tr>
+<tr><td>Dò tuyến tính (linear probing)</td><td>h(k, i) = (h(k) + i) mod M</td><td>dò ô kế tiếp, vòng tròn</td></tr>
+<tr><td>Dò bậc 2 (quadratic probing)</td><td>h(k, i) = (h(k) + i²) mod M</td><td>bước 1, 4, 9, 16…</td></tr>
+<tr><td>Băm kép (double hashing)</td><td>h(k, i) = (h₁(k) + i·h₂(k)) mod M</td><td>đề mẫu: h₁ = k mod 7, h₂ = 7 − (k mod 7)</td></tr>
+</table>
+<p><strong>Hệ số tải (load factor)</strong>: α = n/M (n khóa, M ô). Đề câu 7 cho α = 0.6: <em>[suy luận — hỏi lại giảng viên]</em> chỉ chèn thêm khi α sau khi chèn ≤ 0.6 — vì vậy 29 và 36 không được chèn (7/11 ≈ 0.64 &gt; 0.6), bảng dừng ở 6 khóa.</p>
+
+<h2>7. Thêm / tìm / xóa với địa chỉ mở — bảng trạng thái ô</h2>
+<table>
+<tr><th>Gặp ô nào khi dò</th><th>Thêm (insert)</th><th>Tìm (search)</th><th>Xóa (delete)</th></tr>
+<tr><td><strong>Empty</strong></td><td>đặt khóa vào đây, dừng</td><td>dừng — <strong>chắc chắn x không có</strong></td><td>dừng — x không có</td></tr>
+<tr><td><strong>Occupied</strong> (khác x)</td><td>dò ô kế (i+1)</td><td>dò ô kế</td><td>dò ô kế</td></tr>
+<tr><td><strong>Occupied</strong> = x</td><td>đã có, bỏ qua</td><td>thấy x, trả về ô</td><td>xóa, đánh dấu <strong>DEL</strong> — <em>không</em> để Empty</td></tr>
+<tr><td><strong>DEL</strong></td><td>nhớ ô DEL đầu tiên (ưu tiên đặt vào đây), vẫn dò tiếp tới Empty</td><td>bỏ qua, dò tiếp</td><td>bỏ qua, dò tiếp</td></tr>
+</table>
+<p>Đặt vào <strong>DEL đầu tiên</strong> gặp (không phải DEL cuối trước Empty) — chỉ được chắc chắn x chưa có khi dò tới Empty hoặc quét hết bảng. Vì sao không để Empty khi xóa: Empty chặn sớm lời dò, các khóa sau nó sẽ "mất tích" — xem <a href="https://opendsa-server.cs.vt.edu/ODSA/Books/CS3/html/HashDel.html">OpenDSA — Hashing Deletion (tombstone)</a>; mô phỏng trực quan: <a href="https://visualgo.net/en/hashtable">VisuAlgo — Hash Table</a>.</p>
+
+<h2>8. Ví dụ đề mẫu Câu 8 — dò tuyến tính, M = 10, h(k) = k mod 10</h2>
+<p>Trạng thái đề cho — chèn <strong>10</strong> rồi <strong>23</strong>:</p>
+<table class="grid">
+<tr><th>Chỉ số</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+<tr><th>Khóa</th><td>50</td><td>41</td><td class="del">DEL</td><td>22</td><td></td><td>55</td><td class="del">DEL</td><td></td><td class="del">DEL</td><td>28</td></tr>
+</table>
+<p><strong>Chèn 10</strong>: dò 0 (50), 1 (41), 2 (<span class="del">DEL</span> — nhớ ô 2, dò tiếp), 3 (22 ≠ 10), 4 (<strong>Empty</strong> ⇒ chắc chắn 10 chưa có) → đặt vào DEL đầu tiên = <strong>ô 2</strong>. <strong>Chèn 23</strong>: dò 3 (22 ≠ 23), 4 (<strong>Empty</strong>) → đặt vào <strong>ô 4</strong>. Kết quả (đã kiểm chứng):</p>
+<table class="grid">
+<tr><th>Chỉ số</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+<tr><th>Khóa</th><td>50</td><td>41</td><td class="new">10</td><td>22</td><td class="new">23</td><td>55</td><td class="del">DEL</td><td></td><td class="del">DEL</td><td>28</td></tr>
+</table>
+
+<div class="source"><p>B-Tree: <a href="https://users.cs.utah.edu/~pandey/courses/cs6530/fall23/papers/trees/p121-comer.pdf">Comer 1979 — <em>The Ubiquitous B-Tree</em></a> (underflow / redistribution / concatenation). Bảng băm: <a href="https://opendsa-server.cs.vt.edu/ODSA/Books/CS3/html/HashDel.html">OpenDSA — Hashing Deletion</a> + <a href="https://visualgo.net/en/hashtable">VisuAlgo — Hash Table</a> (chạy thử từng bước). Thuật ngữ chi tiết: <a href="../reference/glossary.html">Thuật ngữ</a>.</p></div>
+</main>
+</body>
+</html>
